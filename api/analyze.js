@@ -55,8 +55,7 @@ export default async function handler(req, res) {
       // 1. 最新のFlash（高速）
       // 2. 上位版のPro（Flashが404で見つからない時の保険）
       // 3. 旧安定版Vision（何をやってもダメな時の最終手段）
-      const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro-vision'];
-      
+      const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-pro-vision'];
       let lastError = null;
       let success = false;
 
