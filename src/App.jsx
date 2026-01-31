@@ -182,7 +182,7 @@ function App() {
             color: 'black',
             fontFamily: '"OTR Grotesk", system-ui, sans-serif',
             fontSize: 14,
-            fontWeight: 900,
+            fontWeight: 400,
             letterSpacing: '0.05em',
             border: 'none',
             cursor: 'pointer',
@@ -234,8 +234,8 @@ function App() {
             }}>
               <div style={{
                 fontFamily: '"OTR Grotesk", system-ui, sans-serif',
-                fontWeight: 900,
-                fontSize: 'clamp(24px, 8vw, 80px)',
+                fontWeight: 400,
+                fontSize: 'clamp(36px, 12vw, 120px)',
                 color: 'white',
                 textAlign: 'center',
                 lineHeight: 0.9,
@@ -260,8 +260,8 @@ function App() {
             }}>
               <div style={{
                 fontFamily: '"OTR Grotesk", system-ui, sans-serif',
-                fontWeight: 900,
-                fontSize: 'clamp(24px, 8vw, 80px)',
+                fontWeight: 400,
+                fontSize: 'clamp(36px, 12vw, 120px)',
                 color: 'white',
                 letterSpacing: '-0.02em',
               }}>
