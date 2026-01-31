@@ -167,12 +167,12 @@ function App() {
             }}>
               <div style={{
                 fontFamily: '"OTR Grotesk", system-ui, sans-serif',
-                fontWeight: 900,
+                fontWeight: 400,
                 fontSize: 'clamp(36px, 12vw, 120px)',
                 color: 'white',
                 textAlign: 'center',
                 lineHeight: 0.9,
-                letterSpacing: '-0.02em',
+                letterSpacing: '-0.01em',
                 whiteSpace: 'pre-wrap',
                 mixBlendMode: 'difference',
               }}>
@@ -193,10 +193,10 @@ function App() {
             }}>
               <div style={{
                 fontFamily: '"OTR Grotesk", system-ui, sans-serif',
-                fontWeight: 900,
+                fontWeight: 400,
                 fontSize: 'clamp(36px, 12vw, 120px)',
                 color: 'white',
-                letterSpacing: '-0.02em',
+                letterSpacing: '-0.01em',
               }}>
                 ...
               </div>
