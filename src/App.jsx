@@ -115,7 +115,7 @@ function App() {
             color: 'black',
             fontFamily: '"OTR Grotesk", system-ui, sans-serif',
             fontSize: 14,
-            fontWeight: 900,
+            fontWeight: 400,
             letterSpacing: '0.05em',
             border: 'none',
             cursor: 'pointer',
