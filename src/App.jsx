@@ -11,8 +11,6 @@ function App() {
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
 
-  const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
-
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -36,88 +34,20 @@ function App() {
     setIsStreaming(false);
   };
 
-  const analyzeWithGemini = async (base64Image) => {
-    const prompts = {
-      gemini: 'Describe this image in 10 words or less. Be direct and poetic. Reply in uppercase.',
-      celebrity: 'If there is a famous person in this image, tell me who they are. If not, describe who you see. Be brief, 10 words max. Reply in uppercase.',
-      mood: 'Describe the mood or atmosphere of this image in 5 words or less. Reply in uppercase.',
-      haiku: 'Write a haiku about this image. Reply in uppercase.',
-    };
+  // ★修正箇所: 自分のバックエンドAPI (/api/analyze) を呼ぶ関数に変更
+  const analyzeImage = async (base64Image) => {
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base64Image, mode }),
+    });
 
-    const response = await fetch(
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: prompts[mode] },
-              {
-                inline_data: {
-                  mime_type: 'image/jpeg',
-                  data: base64Image
-                }
-              }
-            ]
-          }]
-        })
-      }
-    );
+    if (!response.ok) {
+      throw new Error('Server error');
+    }
 
     const data = await response.json();
-    
-    if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-      return data.candidates[0].content.parts[0].text.toUpperCase();
-    }
-    
-    throw new Error('No response from Gemini');
-  };
-
-  const analyzeWithVision = async (base64Image) => {
-    const features = {
-      labels: [{ type: 'LABEL_DETECTION', maxResults: 10 }],
-      text: [{ type: 'TEXT_DETECTION' }],
-      faces: [{ type: 'FACE_DETECTION', maxResults: 10 }],
-    };
-
-    const response = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requests: [{
-            image: { content: base64Image },
-            features: features[mode]
-          }]
-        })
-      }
-    );
-
-    const data = await response.json();
-    const res = data.responses?.[0];
-    
-    if (!res) throw new Error('No response');
-
-    if (mode === 'labels' && res.labelAnnotations) {
-      return res.labelAnnotations.slice(0, 5).map(l => l.description.toUpperCase()).join('\n');
-    }
-    if (mode === 'text' && res.textAnnotations?.[0]) {
-      return res.textAnnotations[0].description.toUpperCase().slice(0, 100);
-    }
-    if (mode === 'faces' && res.faceAnnotations) {
-      return res.faceAnnotations.map((face, i) => {
-        const emotions = [];
-        if (face.joyLikelihood === 'VERY_LIKELY' || face.joyLikelihood === 'LIKELY') emotions.push('HAPPY');
-        if (face.sorrowLikelihood === 'VERY_LIKELY' || face.sorrowLikelihood === 'LIKELY') emotions.push('SAD');
-        if (face.angerLikelihood === 'VERY_LIKELY' || face.angerLikelihood === 'LIKELY') emotions.push('ANGRY');
-        if (face.surpriseLikelihood === 'VERY_LIKELY' || face.surpriseLikelihood === 'LIKELY') emotions.push('SURPRISED');
-        return emotions.length > 0 ? emotions.join(' ') : 'NEUTRAL';
-      }).join('\n');
-    }
-    
-    throw new Error('No results');
+    return data.result;
   };
 
   const captureAndAnalyze = async () => {
@@ -133,6 +63,7 @@ function App() {
     ctx.drawImage(video, 0, 0);
     
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
+    // Base64のヘッダー部分を削除してデータだけ送る
     const base64Image = imageData.replace(/^data:image\/\w+;base64,/, '');
     
     setCapturedImage(imageData);
@@ -140,14 +71,8 @@ function App() {
     setLoading(true);
 
     try {
-      let resultText;
-      
-      if (['gemini', 'celebrity', 'mood', 'haiku'].includes(mode)) {
-        resultText = await analyzeWithGemini(base64Image);
-      } else {
-        resultText = await analyzeWithVision(base64Image);
-      }
-      
+      // ★ここでサーバーへの問い合わせを実行
+      const resultText = await analyzeImage(base64Image);
       setResult(resultText);
     } catch (e) {
       console.error('API error:', e);
@@ -190,7 +115,7 @@ function App() {
             color: 'black',
             fontFamily: '"OTR Grotesk", system-ui, sans-serif',
             fontSize: 14,
-            fontWeight: 400,
+            fontWeight: 900,
             letterSpacing: '0.05em',
             border: 'none',
             cursor: 'pointer',
@@ -242,7 +167,7 @@ function App() {
             }}>
               <div style={{
                 fontFamily: '"OTR Grotesk", system-ui, sans-serif',
-                fontWeight: 400,
+                fontWeight: 900,
                 fontSize: 'clamp(36px, 12vw, 120px)',
                 color: 'white',
                 textAlign: 'center',
@@ -268,7 +193,7 @@ function App() {
             }}>
               <div style={{
                 fontFamily: '"OTR Grotesk", system-ui, sans-serif',
-                fontWeight: 400,
+                fontWeight: 900,
                 fontSize: 'clamp(36px, 12vw, 120px)',
                 color: 'white',
                 letterSpacing: '-0.02em',
