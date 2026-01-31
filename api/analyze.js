@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   // 2. APIキーとデータの準備
   // ---------------------------------------------------------
   const { base64Image, mode } = req.body;
-  const API_KEY = process.env.VITE_GOOGLE_API_KEY;
+  const API_KEY = process.env.GOOGLE_API_KEY;
 
   if (!API_KEY) {
     return res.status(500).json({ error: 'API Key not configured' });
