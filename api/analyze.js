@@ -41,7 +41,7 @@ export default async function handler(req, res) {
       };
 
       const genAI = new GoogleGenerativeAI(API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-001' });
       
       const prompt = prompts[mode];
       const imagePart = {
