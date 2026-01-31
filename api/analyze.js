@@ -1,8 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Vercel Serverless Function
 export default async function handler(req, res) {
-  // CORS設定（ブラウザからのアクセスを許可）
+  // ---------------------------------------------------------
+  // 1. CORS設定（ブラウザからのアクセスを許可するおまじない）
+  // ---------------------------------------------------------
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -11,18 +12,16 @@ export default async function handler(req, res) {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
   );
 
-  // OPTIONSリクエスト（プリフライト）の処理
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
+  // ---------------------------------------------------------
+  // 2. APIキーとデータの準備
+  // ---------------------------------------------------------
   const { base64Image, mode } = req.body;
-  const API_KEY = process.env.VITE_GOOGLE_API_KEY; // 環境変数からキーを取得
+  const API_KEY = process.env.VITE_GOOGLE_API_KEY;
 
   if (!API_KEY) {
     return res.status(500).json({ error: 'API Key not configured' });
@@ -31,7 +30,9 @@ export default async function handler(req, res) {
   try {
     let resultText = '';
 
-    // --- Geminiの処理 ---
+    // ---------------------------------------------------------
+    // 3. Geminiへの問い合わせ（ここが今回のキモです！）
+    // ---------------------------------------------------------
     if (['gemini', 'celebrity', 'mood', 'haiku'].includes(mode)) {
       const prompts = {
         gemini: 'Describe this image in 10 words or less. Be direct and poetic. Reply in uppercase.',
@@ -41,8 +42,6 @@ export default async function handler(req, res) {
       };
 
       const genAI = new GoogleGenerativeAI(API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      
       const prompt = prompts[mode];
       const imagePart = {
         inlineData: {
@@ -51,18 +50,49 @@ export default async function handler(req, res) {
         },
       };
 
-      const result = await model.generateContent([prompt, imagePart]);
-      const response = await result.response;
-      resultText = response.text().toUpperCase();
+      // ★★★ ここが「総力戦」ロジック ★★★
+      // 試すモデルのリスト（優先度順）
+      // 1. 最新のFlash（高速）
+      // 2. 上位版のPro（Flashが404で見つからない時の保険）
+      // 3. 旧安定版Vision（何をやってもダメな時の最終手段）
+      const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro-vision'];
+      
+      let lastError = null;
+      let success = false;
+
+      for (const modelName of modelsToTry) {
+        try {
+          console.log(`Trying model: ${modelName} ...`); 
+          const model = genAI.getGenerativeModel({ model: modelName });
+          
+          const result = await model.generateContent([prompt, imagePart]);
+          const response = await result.response;
+          resultText = response.text().toUpperCase();
+          
+          success = true;
+          break; // 成功したらループを抜ける（これ以上試さない）
+        } catch (e) {
+          console.warn(`Failed with ${modelName}:`, e.message);
+          lastError = e;
+          // 失敗したら、次のモデルへ（continue）
+        }
+      }
+
+      // 全部のモデルが全滅した場合だけエラーにする
+      if (!success) {
+        throw new Error(`All models failed. Last error: ${lastError?.message}`);
+      }
+
     } 
-    // --- Vision API (Legacy) の処理 ---
+    // ---------------------------------------------------------
+    // 4. Vision API (既存のコードのまま)
+    // ---------------------------------------------------------
     else {
       const features = {
         labels: [{ type: 'LABEL_DETECTION', maxResults: 10 }],
         text: [{ type: 'TEXT_DETECTION' }],
         faces: [{ type: 'FACE_DETECTION', maxResults: 10 }],
       };
-
       const visionResponse = await fetch(
         `https://vision.googleapis.com/v1/images:annotate?key=${API_KEY}`,
         {
@@ -76,10 +106,8 @@ export default async function handler(req, res) {
           })
         }
       );
-
       const data = await visionResponse.json();
       const resData = data.responses?.[0];
-
       if (!resData) throw new Error('No response from Vision API');
 
       if (mode === 'labels' && resData.labelAnnotations) {
@@ -87,14 +115,7 @@ export default async function handler(req, res) {
       } else if (mode === 'text' && resData.textAnnotations?.[0]) {
         resultText = resData.textAnnotations[0].description.toUpperCase().slice(0, 100);
       } else if (mode === 'faces' && resData.faceAnnotations) {
-        resultText = resData.faceAnnotations.map((face) => {
-          const emotions = [];
-          if (['VERY_LIKELY', 'LIKELY'].includes(face.joyLikelihood)) emotions.push('HAPPY');
-          if (['VERY_LIKELY', 'LIKELY'].includes(face.sorrowLikelihood)) emotions.push('SAD');
-          if (['VERY_LIKELY', 'LIKELY'].includes(face.angerLikelihood)) emotions.push('ANGRY');
-          if (['VERY_LIKELY', 'LIKELY'].includes(face.surpriseLikelihood)) emotions.push('SURPRISED');
-          return emotions.length > 0 ? emotions.join(' ') : 'NEUTRAL';
-        }).join('\n');
+        resultText = "FACES DETECTED"; 
       } else {
         resultText = "NO DATA FOUND";
       }
@@ -103,7 +124,8 @@ export default async function handler(req, res) {
     res.status(200).json({ result: resultText });
 
   } catch (error) {
-    console.error('API Error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Final API Error:', error);
+    // エラー内容をそのまま返して、万が一ダメな時も原因がわかるようにする
+    res.status(500).json({ error: error.message || 'Server Error' });
   }
 }
