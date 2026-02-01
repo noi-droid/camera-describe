@@ -127,43 +127,50 @@ function App() {
   };
 
   const captureAndAnalyze = async () => {
-    if (!videoRef.current) return;
+  if (!videoRef.current) return;
 
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
-    
-    // フィルターを適用
-    applyFilters(canvas, ctx);
-    
-    const imageData = canvas.toDataURL('image/jpeg', 0.8);
-    const base64Image = imageData.replace(/^data:image\/\w+;base64,/, '');
-    
-    setCapturedImage(imageData);
-    stopCamera();
-    setLoading(true);
+  const canvas = canvasRef.current;
+  const video = videoRef.current;
+  
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  
+  // APIに送る用（フィルターなし）
+  const rawImageData = canvas.toDataURL('image/jpeg', 0.8);
+  const base64Image = rawImageData.replace(/^data:image\/\w+;base64,/, '');
+  
+  // 表示用（フィルターあり）
+  applyFilters(canvas, ctx);
+  const filteredImageData = canvas.toDataURL('image/jpeg', 0.8);
+  
+  setCapturedImage(filteredImageData);
+  stopCamera();
+  setLoading(true);
 
-    try {
-      const resultText = await analyzeImage(base64Image);
-      setResult(resultText);
-    } catch (e) {
-      console.error('API error:', e);
-      setResult('ERROR');
-    }
-    
-    setLoading(false);
-  };
+  try {
+    // フィルターなしの画像をAPIに送る
+    const resultText = await analyzeImage(base64Image);
+    setResult(resultText);
+  } catch (e) {
+    console.error('API error:', e);
+    setResult('ERROR');
+  }
+  
+  setLoading(false);
+};
 
-  const reset = () => {
-    setCapturedImage(null);
-    setResult(null);
-    startCamera();
-  };
+const reset = () => {
+  setCapturedImage(null);
+  setResult(null);
+  // 設定をリセット
+  setZoom(1);
+  setMonochrome(false);
+  setGrain(0);
+  startCamera();
+};
 
   const cycleMode = () => {
     const modes = ['gemini', 'celebrity', 'mood', 'haiku', 'labels', 'text', 'faces'];
