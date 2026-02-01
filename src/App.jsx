@@ -7,6 +7,7 @@ function App() {
   const [displayedResult, setDisplayedResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('gemini');
+  const [dots, setDots] = useState('');
   
   // カメラ設定
   const [facingMode, setFacingMode] = useState('environment');
@@ -22,35 +23,50 @@ function App() {
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const trackRef = useRef(null);
-  const [dots, setDots] = useState('');
+
+  // ローディングドットアニメーション
+  useEffect(() => {
+    if (!loading) {
+      setDots('');
+      return;
+    }
+    
+    let count = 0;
+    const interval = setInterval(() => {
+      count = (count + 1) % 4;
+      setDots('.'.repeat(count));
+    }, 300);
+    
+    return () => clearInterval(interval);
+  }, [loading]);
 
   // タイプライター効果
-useEffect(() => {
-  if (!result) {
-    setDisplayedResult('');
-    return;
-  }
-  
-  // DONALD TRUMPを置換
-  let processedResult = result;
-  if (mode === 'celebrity') {
-    processedResult = result.replace(/DONALD TRUMP/gi, 'ORANGE CROWN');
-  }
-  
-  setDisplayedResult('');
-  let index = 0;
-  
-  const interval = setInterval(() => {
-    if (index < processedResult.length) {
-      setDisplayedResult(processedResult.slice(0, index + 1));
-      index++;
-    } else {
-      clearInterval(interval);
+  useEffect(() => {
+    if (!result) {
+      setDisplayedResult('');
+      return;
     }
-  }, 50);
-  
-  return () => clearInterval(interval);
-}, [result, mode]);
+    
+    // DONALD TRUMPを置換
+    let processedResult = result;
+    if (mode === 'celebrity') {
+      processedResult = result.replace(/DONALD TRUMP/gi, 'ORANGE CROWN');
+    }
+    
+    setDisplayedResult('');
+    let index = 0;
+    
+    const interval = setInterval(() => {
+      if (index < processedResult.length) {
+        setDisplayedResult(processedResult.slice(0, index + 1));
+        index++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 50);
+    
+    return () => clearInterval(interval);
+  }, [result, mode]);
 
   const startCamera = async (facing = facingMode) => {
     try {
@@ -188,12 +204,12 @@ useEffect(() => {
     setLoading(false);
   };
 
-const reset = () => {
-  setCapturedImage(null);
-  setResult(null);
-  setZoom(1);
-  startCamera();
-};
+  const reset = () => {
+    setCapturedImage(null);
+    setResult(null);
+    setZoom(1);
+    startCamera();
+  };
 
   const cycleMode = () => {
     const modes = ['gemini', 'celebrity', 'mood', 'haiku', 'labels', 'text', 'faces'];
@@ -245,27 +261,7 @@ const reset = () => {
           filter: `${monochrome ? 'grayscale(100%)' : ''} ${grain > 0 ? `contrast(${100 + grain * 0.2}%)` : ''}`,
         }}
       />
-{/* Loading overlay */}
-{loading && (
-  <div style={{
-    position: 'absolute',
-    inset: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  }}>
-    <div style={{
-      fontFamily: 'monospace',
-      fontWeight: 400,
-      fontSize: 14,
-      color: 'rgb(0, 255, 0)',
-      letterSpacing: '0.05em',
-    }}>
-      THINKING{dots}
-    </div>
-  </div>
-)}
+
       {/* Captured image with overlay */}
       {capturedImage && (
         <div style={{
@@ -302,34 +298,34 @@ const reset = () => {
                 lineHeight: 0.9,
                 letterSpacing: '-0.01em',
                 whiteSpace: 'pre-wrap',
-                //mixBlendMode: 'difference',
               }}>
                 {displayedResult}
               </div>
             </div>
           )}
+        </div>
+      )}
 
-          {/* Loading overlay */}
-          {loading && (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'rgba(0,0,0,0.5)',
-            }}>
-              <div style={{
-                fontFamily: '"OTR Grotesk", system-ui, sans-serif',
-                fontWeight: 900,
-                fontSize: 'clamp(36px, 12vw, 120px)',
-                color: 'rgb(0, 255, 0)',
-                letterSpacing: '-0.02em',
-              }}>
-                ...
-              </div>
-            </div>
-          )}
+      {/* Loading overlay */}
+      {loading && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          zIndex: 30,
+        }}>
+          <div style={{
+            fontFamily: 'monospace',
+            fontWeight: 400,
+            fontSize: 14,
+            color: 'rgb(0, 255, 0)',
+            letterSpacing: '0.05em',
+          }}>
+            THINKING{dots}
+          </div>
         </div>
       )}
 
@@ -476,7 +472,7 @@ const reset = () => {
             borderRadius: '50%',
             backgroundColor: 'white',
             opacity: 0.5,
-            //border: '4px solid rgba(255,255,255,0.0)',
+            border: 'none',
             cursor: 'pointer',
             zIndex: 10,
           }}
