@@ -24,26 +24,32 @@ function App() {
   const trackRef = useRef(null);
 
   // タイプライター効果
-  useEffect(() => {
-    if (!result) {
-      setDisplayedResult('');
-      return;
-    }
-    
+useEffect(() => {
+  if (!result) {
     setDisplayedResult('');
-    let index = 0;
-    
-    const interval = setInterval(() => {
-      if (index < result.length) {
-        setDisplayedResult(result.slice(0, index + 1));
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 50);
-    
-    return () => clearInterval(interval);
-  }, [result]);
+    return;
+  }
+  
+  // DONALD TRUMPを置換
+  let processedResult = result;
+  if (mode === 'celebrity') {
+    processedResult = result.replace(/DONALD TRUMP/gi, 'ORANGE CROWN');
+  }
+  
+  setDisplayedResult('');
+  let index = 0;
+  
+  const interval = setInterval(() => {
+    if (index < processedResult.length) {
+      setDisplayedResult(processedResult.slice(0, index + 1));
+      index++;
+    } else {
+      clearInterval(interval);
+    }
+  }, 50);
+  
+  return () => clearInterval(interval);
+}, [result, mode]);
 
   const startCamera = async (facing = facingMode) => {
     try {
