@@ -22,6 +22,7 @@ function App() {
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const trackRef = useRef(null);
+  const [dots, setDots] = useState('');
 
   // タイプライター効果
 useEffect(() => {
@@ -244,7 +245,27 @@ const reset = () => {
           filter: `${monochrome ? 'grayscale(100%)' : ''} ${grain > 0 ? `contrast(${100 + grain * 0.2}%)` : ''}`,
         }}
       />
-
+{/* Loading overlay */}
+{loading && (
+  <div style={{
+    position: 'absolute',
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  }}>
+    <div style={{
+      fontFamily: 'monospace',
+      fontWeight: 400,
+      fontSize: 14,
+      color: 'rgb(0, 255, 0)',
+      letterSpacing: '0.05em',
+    }}>
+      THINKING{dots}
+    </div>
+  </div>
+)}
       {/* Captured image with overlay */}
       {capturedImage && (
         <div style={{
