@@ -187,14 +187,12 @@ useEffect(() => {
     setLoading(false);
   };
 
-  const reset = () => {
-    setCapturedImage(null);
-    setResult(null);
-    setZoom(1);
-    setMonochrome(false);
-    setGrain(0);
-    startCamera();
-  };
+const reset = () => {
+  setCapturedImage(null);
+  setResult(null);
+  setZoom(1);
+  startCamera();
+};
 
   const cycleMode = () => {
     const modes = ['gemini', 'celebrity', 'mood', 'haiku', 'labels', 'text', 'faces'];
