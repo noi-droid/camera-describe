@@ -277,7 +277,7 @@ function App() {
                 lineHeight: 0.9,
                 letterSpacing: '-0.01em',
                 whiteSpace: 'pre-wrap',
-                mixBlendMode: 'difference',
+                //mixBlendMode: 'difference',
               }}>
                 {displayedResult}
               </div>
