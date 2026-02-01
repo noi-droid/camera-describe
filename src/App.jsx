@@ -454,7 +454,8 @@ const reset = () => {
             height: 64,
             borderRadius: '50%',
             backgroundColor: 'white',
-            border: '4px solid rgba(255,255,255,0.5)',
+            opacity: 0.5,
+            //border: '4px solid rgba(255,255,255,0.0)',
             cursor: 'pointer',
             zIndex: 10,
           }}
