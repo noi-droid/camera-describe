@@ -238,8 +238,8 @@ const reset = () => {
         playsInline
         style={{
           display: isStreaming ? 'block' : 'none',
-          width: '90vw',
-          height: '90vh',
+          width: '100vw',
+          height: '100vh',
           objectFit: 'cover',
           filter: `${monochrome ? 'grayscale(100%)' : ''} ${grain > 0 ? `contrast(${100 + grain * 0.2}%)` : ''}`,
         }}
@@ -249,8 +249,8 @@ const reset = () => {
       {capturedImage && (
         <div style={{
           position: 'relative',
-          width: '90vw',
-          height: '90vh',
+          width: '100vw',
+          height: '100vh',
         }}>
           <img
             src={capturedImage}
