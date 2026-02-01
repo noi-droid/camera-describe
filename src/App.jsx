@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 function App() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [result, setResult] = useState(null);
+  const [displayedResult, setDisplayedResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('gemini');
   
@@ -15,12 +16,34 @@ function App() {
   
   // フィルター設定
   const [monochrome, setMonochrome] = useState(false);
-  const [grain, setGrain] = useState(0); // 0-100
+  const [grain, setGrain] = useState(0);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const trackRef = useRef(null);
+
+  // タイプライター効果
+  useEffect(() => {
+    if (!result) {
+      setDisplayedResult('');
+      return;
+    }
+    
+    setDisplayedResult('');
+    let index = 0;
+    
+    const interval = setInterval(() => {
+      if (index < result.length) {
+        setDisplayedResult(result.slice(0, index + 1));
+        index++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 50);
+    
+    return () => clearInterval(interval);
+  }, [result]);
 
   const startCamera = async (facing = facingMode) => {
     try {
@@ -82,22 +105,19 @@ function App() {
     startCamera(newFacing);
   };
 
-  // フィルターを適用
   const applyFilters = (canvas, ctx) => {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
 
-    // モノクロ
     if (monochrome) {
       for (let i = 0; i < data.length; i += 4) {
         const avg = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-        data[i] = avg;     // R
-        data[i + 1] = avg; // G
-        data[i + 2] = avg; // B
+        data[i] = avg;
+        data[i + 1] = avg;
+        data[i + 2] = avg;
       }
     }
 
-    // グレイン
     if (grain > 0) {
       const intensity = grain / 100 * 80;
       for (let i = 0; i < data.length; i += 4) {
@@ -127,50 +147,48 @@ function App() {
   };
 
   const captureAndAnalyze = async () => {
-  if (!videoRef.current) return;
+    if (!videoRef.current) return;
 
-  const canvas = canvasRef.current;
-  const video = videoRef.current;
-  
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0);
-  
-  // APIに送る用（フィルターなし）
-  const rawImageData = canvas.toDataURL('image/jpeg', 0.8);
-  const base64Image = rawImageData.replace(/^data:image\/\w+;base64,/, '');
-  
-  // 表示用（フィルターあり）
-  applyFilters(canvas, ctx);
-  const filteredImageData = canvas.toDataURL('image/jpeg', 0.8);
-  
-  setCapturedImage(filteredImageData);
-  stopCamera();
-  setLoading(true);
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    // APIに送る用（フィルターなし）
+    const rawImageData = canvas.toDataURL('image/jpeg', 0.8);
+    const base64Image = rawImageData.replace(/^data:image\/\w+;base64,/, '');
+    
+    // 表示用（フィルターあり）
+    applyFilters(canvas, ctx);
+    const filteredImageData = canvas.toDataURL('image/jpeg', 0.8);
+    
+    setCapturedImage(filteredImageData);
+    stopCamera();
+    setLoading(true);
 
-  try {
-    // フィルターなしの画像をAPIに送る
-    const resultText = await analyzeImage(base64Image);
-    setResult(resultText);
-  } catch (e) {
-    console.error('API error:', e);
-    setResult('ERROR');
-  }
-  
-  setLoading(false);
-};
+    try {
+      const resultText = await analyzeImage(base64Image);
+      setResult(resultText);
+    } catch (e) {
+      console.error('API error:', e);
+      setResult('ERROR');
+    }
+    
+    setLoading(false);
+  };
 
-const reset = () => {
-  setCapturedImage(null);
-  setResult(null);
-  // 設定をリセット
-  setZoom(1);
-  setMonochrome(false);
-  setGrain(0);
-  startCamera();
-};
+  const reset = () => {
+    setCapturedImage(null);
+    setResult(null);
+    setZoom(1);
+    setMonochrome(false);
+    setGrain(0);
+    startCamera();
+  };
 
   const cycleMode = () => {
     const modes = ['gemini', 'celebrity', 'mood', 'haiku', 'labels', 'text', 'faces'];
@@ -254,14 +272,14 @@ const reset = () => {
                 fontFamily: '"OTR Grotesk", system-ui, sans-serif',
                 fontWeight: 400,
                 fontSize: 'clamp(36px, 12vw, 120px)',
-                color: 'white',
+                color: 'rgb(0, 255, 0)',
                 textAlign: 'center',
                 lineHeight: 0.9,
                 letterSpacing: '-0.01em',
                 whiteSpace: 'pre-wrap',
-                //mixBlendMode: 'difference',
+                mixBlendMode: 'difference',
               }}>
-                {result}
+                {displayedResult}
               </div>
             </div>
           )}
@@ -280,7 +298,7 @@ const reset = () => {
                 fontFamily: '"OTR Grotesk", system-ui, sans-serif',
                 fontWeight: 900,
                 fontSize: 'clamp(36px, 12vw, 120px)',
-                color: 'white',
+                color: 'rgb(0, 255, 0)',
                 letterSpacing: '-0.02em',
               }}>
                 ...
