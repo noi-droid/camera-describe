@@ -69,35 +69,42 @@ function App() {
   }, [result, mode]);
 
   const startCamera = async (facing = facingMode) => {
-    try {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: facing,
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        } 
-      });
-      
-      videoRef.current.srcObject = stream;
-      streamRef.current = stream;
-      
-      const track = stream.getVideoTracks()[0];
-      trackRef.current = track;
-      
-      const caps = track.getCapabilities();
-      setCapabilities(caps);
-      
-      setIsStreaming(true);
-      setCapturedImage(null);
-      setResult(null);
-    } catch (e) {
-      console.error('Camera access denied:', e);
+  try {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
     }
-  };
+
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { 
+        facingMode: facing,
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+      } 
+    });
+    
+    videoRef.current.srcObject = stream;
+    streamRef.current = stream;
+    
+    const track = stream.getVideoTracks()[0];
+    trackRef.current = track;
+    
+    const caps = track.getCapabilities();
+    setCapabilities(caps);
+    
+    // カメラ準備完了後にクリア
+    setCapturedImage(null);
+    setResult(null);
+    setIsStreaming(true);
+  } catch (e) {
+    console.error('Camera access denied:', e);
+  }
+};
+
+const reset = () => {
+  setZoom(1);
+  // 画像はstartCameraで消すので、ここでは消さない
+  startCamera();
+};
 
   const stopCamera = () => {
     if (streamRef.current) {
