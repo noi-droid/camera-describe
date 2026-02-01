@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 
 function App() {
   const [isStreaming, setIsStreaming] = useState(false);
@@ -8,13 +8,14 @@ function App() {
   const [mode, setMode] = useState('gemini');
   
   // カメラ設定
-  const [facingMode, setFacingMode] = useState('environment'); // environment or user
+  const [facingMode, setFacingMode] = useState('environment');
   const [zoom, setZoom] = useState(1);
-  const [exposure, setExposure] = useState(0);
-  const [focus, setFocus] = useState('auto'); // auto or manual
-  const [focusDistance, setFocusDistance] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [capabilities, setCapabilities] = useState({});
+  
+  // フィルター設定
+  const [monochrome, setMonochrome] = useState(false);
+  const [grain, setGrain] = useState(0); // 0-100
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -23,7 +24,6 @@ function App() {
 
   const startCamera = async (facing = facingMode) => {
     try {
-      // 既存のストリームを停止
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
@@ -42,10 +42,8 @@ function App() {
       const track = stream.getVideoTracks()[0];
       trackRef.current = track;
       
-      // カメラの機能を取得
       const caps = track.getCapabilities();
       setCapabilities(caps);
-      console.log('Camera capabilities:', caps);
       
       setIsStreaming(true);
       setCapturedImage(null);
@@ -64,10 +62,8 @@ function App() {
     setIsStreaming(false);
   };
 
-  // カメラ設定を適用
   const applySettings = async (settings) => {
     if (!trackRef.current) return;
-    
     try {
       await trackRef.current.applyConstraints({ advanced: [settings] });
     } catch (e) {
@@ -75,39 +71,44 @@ function App() {
     }
   };
 
-  // ズーム変更
   const handleZoomChange = (value) => {
     setZoom(value);
     applySettings({ zoom: value });
   };
 
-  // 露出変更
-  const handleExposureChange = (value) => {
-    setExposure(value);
-    applySettings({ exposureCompensation: value });
-  };
-
-  // フォーカス変更
-  const handleFocusChange = (mode) => {
-    setFocus(mode);
-    if (mode === 'auto') {
-      applySettings({ focusMode: 'continuous' });
-    } else {
-      applySettings({ focusMode: 'manual' });
-    }
-  };
-
-  // フォーカス距離変更
-  const handleFocusDistanceChange = (value) => {
-    setFocusDistance(value);
-    applySettings({ focusDistance: value });
-  };
-
-  // カメラ切り替え
   const toggleCamera = () => {
     const newFacing = facingMode === 'environment' ? 'user' : 'environment';
     setFacingMode(newFacing);
     startCamera(newFacing);
+  };
+
+  // フィルターを適用
+  const applyFilters = (canvas, ctx) => {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // モノクロ
+    if (monochrome) {
+      for (let i = 0; i < data.length; i += 4) {
+        const avg = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+        data[i] = avg;     // R
+        data[i + 1] = avg; // G
+        data[i + 2] = avg; // B
+      }
+    }
+
+    // グレイン
+    if (grain > 0) {
+      const intensity = grain / 100 * 80;
+      for (let i = 0; i < data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * intensity;
+        data[i] = Math.min(255, Math.max(0, data[i] + noise));
+        data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
+        data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
   };
 
   const analyzeImage = async (base64Image) => {
@@ -136,6 +137,9 @@ function App() {
     
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0);
+    
+    // フィルターを適用
+    applyFilters(canvas, ctx);
     
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
     const base64Image = imageData.replace(/^data:image\/\w+;base64,/, '');
@@ -188,7 +192,7 @@ function App() {
             color: 'black',
             fontFamily: '"OTR Grotesk", system-ui, sans-serif',
             fontSize: 14,
-            fontWeight: 400,
+            fontWeight: 900,
             letterSpacing: '0.05em',
             border: 'none',
             cursor: 'pointer',
@@ -208,6 +212,7 @@ function App() {
           width: '90vw',
           height: '90vh',
           objectFit: 'cover',
+          filter: `${monochrome ? 'grayscale(100%)' : ''} ${grain > 0 ? `contrast(${100 + grain * 0.2}%)` : ''}`,
         }}
       />
 
@@ -240,12 +245,12 @@ function App() {
             }}>
               <div style={{
                 fontFamily: '"OTR Grotesk", system-ui, sans-serif',
-                fontWeight: 400,
+                fontWeight: 900,
                 fontSize: 'clamp(36px, 12vw, 120px)',
                 color: 'white',
                 textAlign: 'center',
                 lineHeight: 0.9,
-                letterSpacing: '-0.01em',
+                letterSpacing: '-0.02em',
                 whiteSpace: 'pre-wrap',
                 mixBlendMode: 'difference',
               }}>
@@ -303,50 +308,50 @@ function App() {
       </button>
 
       {/* Settings button */}
-{isStreaming && (
-  <button
-    onClick={() => setShowSettings(!showSettings)}
-    style={{
-      position: 'absolute',
-      top: 16,
-      right: 16,
-      padding: '8px 16px',
-      backgroundColor: 'rgba(255,255,255,0.0)',
-      color: 'white',
-      fontFamily: 'monospace',
-      fontSize: 12,
-      border: 'none',
-      cursor: 'pointer',
-      zIndex: 10,
-      mixBlendMode: 'difference',
-    }}
-  >
-    SETTINGS
-  </button>
-)}
+      {isStreaming && (
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          style={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            padding: '8px 16px',
+            backgroundColor: 'rgba(255,255,255,0.0)',
+            color: 'white',
+            fontFamily: 'monospace',
+            fontSize: 12,
+            border: 'none',
+            cursor: 'pointer',
+            zIndex: 10,
+            mixBlendMode: 'difference',
+          }}
+        >
+          SETTINGS
+        </button>
+      )}
 
-{/* Camera toggle button */}
-{isStreaming && (
-  <button
-    onClick={toggleCamera}
-    style={{
-      position: 'absolute',
-      top: 16,
-      right: 100,
-      padding: '8px 16px',
-      backgroundColor: 'rgba(255,255,255,0.0)',
-      color: 'white',
-      fontFamily: 'monospace',
-      fontSize: 12,
-      border: 'none',
-      cursor: 'pointer',
-      zIndex: 10,
-      mixBlendMode: 'difference',
-    }}
-  >
-    FLIP
-  </button>
-)}
+      {/* Camera toggle button */}
+      {isStreaming && (
+        <button
+          onClick={toggleCamera}
+          style={{
+            position: 'absolute',
+            top: 16,
+            right: 100,
+            padding: '8px 16px',
+            backgroundColor: 'rgba(255,255,255,0.0)',
+            color: 'white',
+            fontFamily: 'monospace',
+            fontSize: 12,
+            border: 'none',
+            cursor: 'pointer',
+            zIndex: 10,
+            mixBlendMode: 'difference',
+          }}
+        >
+          FLIP
+        </button>
+      )}
 
       {/* Settings panel */}
       {isStreaming && showSettings && (
@@ -379,65 +384,31 @@ function App() {
             </div>
           )}
 
-          {/* Exposure */}
-          {capabilities.exposureCompensation && (
-            <div style={{ marginBottom: 12 }}>
-              <div>EXPOSURE: {exposure.toFixed(1)}</div>
+          {/* Monochrome */}
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
               <input
-                type="range"
-                min={capabilities.exposureCompensation.min}
-                max={capabilities.exposureCompensation.max}
-                step={capabilities.exposureCompensation.step || 0.1}
-                value={exposure}
-                onChange={(e) => handleExposureChange(parseFloat(e.target.value))}
-                style={{ width: '100%' }}
+                type="checkbox"
+                checked={monochrome}
+                onChange={(e) => setMonochrome(e.target.checked)}
               />
-            </div>
-          )}
+              MONOCHROME
+            </label>
+          </div>
 
-          {/* Focus Mode */}
-          {capabilities.focusMode && (
-            <div style={{ marginBottom: 12 }}>
-              <div>FOCUS:</div>
-              <select
-                value={focus}
-                onChange={(e) => handleFocusChange(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: 4,
-                  backgroundColor: 'black',
-                  color: 'white',
-                  border: '1px solid white',
-                }}
-              >
-                <option value="auto">AUTO</option>
-                <option value="manual">MANUAL</option>
-              </select>
-            </div>
-          )}
-
-          {/* Focus Distance (only for manual) */}
-          {capabilities.focusDistance && focus === 'manual' && (
-            <div style={{ marginBottom: 12 }}>
-              <div>FOCUS DISTANCE: {focusDistance.toFixed(2)}</div>
-              <input
-                type="range"
-                min={capabilities.focusDistance.min}
-                max={capabilities.focusDistance.max}
-                step={capabilities.focusDistance.step || 0.01}
-                value={focusDistance}
-                onChange={(e) => handleFocusDistanceChange(parseFloat(e.target.value))}
-                style={{ width: '100%' }}
-              />
-            </div>
-          )}
-
-          {/* No capabilities message */}
-          {!capabilities.zoom && !capabilities.exposureCompensation && !capabilities.focusMode && (
-            <div style={{ opacity: 0.5 }}>
-              No adjustable settings available on this device
-            </div>
-          )}
+          {/* Grain */}
+          <div style={{ marginBottom: 12 }}>
+            <div>GRAIN: {grain}%</div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={grain}
+              onChange={(e) => setGrain(parseInt(e.target.value))}
+              style={{ width: '100%' }}
+            />
+          </div>
         </div>
       )}
 
