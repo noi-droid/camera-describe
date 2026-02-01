@@ -303,48 +303,50 @@ function App() {
       </button>
 
       {/* Settings button */}
-      {isStreaming && (
-        <button
-          onClick={() => setShowSettings(!showSettings)}
-          style={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            padding: '8px 16px',
-            backgroundColor: 'rgba(255,255,255,0.2)',
-            color: 'white',
-            fontFamily: 'monospace',
-            fontSize: 12,
-            border: 'none',
-            cursor: 'pointer',
-            zIndex: 10,
-          }}
-        >
-          ⚙️
-        </button>
-      )}
+{isStreaming && (
+  <button
+    onClick={() => setShowSettings(!showSettings)}
+    style={{
+      position: 'absolute',
+      top: 16,
+      right: 16,
+      padding: '8px 16px',
+      backgroundColor: 'rgba(255,255,255,0.0)',
+      color: 'white',
+      fontFamily: 'monospace',
+      fontSize: 12,
+      border: 'none',
+      cursor: 'pointer',
+      zIndex: 10,
+      mixBlendMode: 'difference',
+    }}
+  >
+    SETTINGS
+  </button>
+)}
 
-      {/* Camera toggle button */}
-      {isStreaming && (
-        <button
-          onClick={toggleCamera}
-          style={{
-            position: 'absolute',
-            top: 16,
-            right: 60,
-            padding: '8px 16px',
-            backgroundColor: 'rgba(255,255,255,0.2)',
-            color: 'white',
-            fontFamily: 'monospace',
-            fontSize: 12,
-            border: 'none',
-            cursor: 'pointer',
-            zIndex: 10,
-          }}
-        >
-          🔄
-        </button>
-      )}
+{/* Camera toggle button */}
+{isStreaming && (
+  <button
+    onClick={toggleCamera}
+    style={{
+      position: 'absolute',
+      top: 16,
+      right: 100,
+      padding: '8px 16px',
+      backgroundColor: 'rgba(255,255,255,0.0)',
+      color: 'white',
+      fontFamily: 'monospace',
+      fontSize: 12,
+      border: 'none',
+      cursor: 'pointer',
+      zIndex: 10,
+      mixBlendMode: 'difference',
+    }}
+  >
+    FLIP
+  </button>
+)}
 
       {/* Settings panel */}
       {isStreaming && showSettings && (
