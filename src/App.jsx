@@ -193,17 +193,38 @@ function App() {
   };
 
   const saveImage = async () => {
-    const element = document.querySelector('[data-capture]');
-    if (!element) return;
-    
-    const canvas = await html2canvas(element, {
-      backgroundColor: null,
-    });
+  const element = document.querySelector('[data-capture]');
+  if (!element) return;
+  
+  const canvas = await html2canvas(element, {
+    backgroundColor: null,
+    scale: 2,
+  });
+  
+  // Web Share APIが使えるか確認（iOS Safari対応）
+  if (navigator.share && navigator.canShare) {
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], `camera-describe-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      
+      if (navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+          });
+          return;
+        } catch (e) {
+          console.log('Share cancelled');
+        }
+      }
+    }, 'image/jpeg', 0.95);
+  } else {
+    // フォールバック：ダウンロードリンク
     const link = document.createElement('a');
     link.download = `camera-describe-${Date.now()}.jpg`;
-    link.href = canvas.toDataURL('image/jpeg', 0.9);
+    link.href = canvas.toDataURL('image/jpeg', 0.95);
     link.click();
-  };
+  }
+};
 
   const reset = () => {
     setCapturedImage(null);
