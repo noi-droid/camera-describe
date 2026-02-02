@@ -232,10 +232,10 @@ function App() {
   };
 
   const cycleMode = () => {
-  const modes = ['gemini', 'describe', 'mood', 'haiku', 'labels', 'text', 'faces'];
-  const currentIndex = modes.indexOf(mode);
-  setMode(modes[(currentIndex + 1) % modes.length]);
-};
+    const modes = ['gemini', 'celebrity', 'mood', 'haiku', 'labels', 'text', 'faces'];
+    const currentIndex = modes.indexOf(mode);
+    setMode(modes[(currentIndex + 1) % modes.length]);
+  };
 
   return (
     <div style={{
@@ -332,7 +332,7 @@ function App() {
                 <div style={{
                   fontFamily: '"OTR Grotesk", system-ui, sans-serif',
                   fontWeight: 400,
-                  fontSize: 'clamp(24px, 8vw, 80px)',
+                  fontSize: 'clamp(24px, 8vw, 0px)',
                   color: 'rgb(0, 255, 0)',
                   textAlign: 'center',
                   lineHeight: 0.9,
