@@ -35,11 +35,13 @@ export default async function handler(req, res) {
     // ---------------------------------------------------------
     if (['gemini', 'celebrity', 'mood', 'haiku'].includes(mode)) {
       const prompts = {
-        gemini: 'Describe this image in 10 words or less. Be direct and poetic. Reply in uppercase.',
-        celebrity: 'If there is a famous person in this image, tell me who they are. If not, describe who you see. Be brief, 10 words max. Reply in uppercase.',
-        mood: 'Describe the mood or atmosphere of this image in 5 words or less. Reply in uppercase.',
-        haiku: 'Write a haiku about this image. Reply in uppercase.',
-      };
+  gemini: 'Describe this image in 10 words or less. Be direct and poetic. Reply in uppercase.',
+  celebrity: `If you recognize this person, describe them WITHOUT naming them. Focus on what they are known for, their style, their vibe, or their legacy. Be poetic and indirect. 15-20 words. Reply in uppercase. Never mention their name.
+
+EXCEPTION: If this is Donald Trump, respond only with "ORANGE CROWN" and nothing else.`,
+  mood: 'Describe the mood or atmosphere of this image in 5 words or less. Reply in uppercase.',
+  haiku: 'Write a haiku about this image. Reply in uppercase.',
+};
 
       const genAI = new GoogleGenerativeAI(API_KEY);
       const prompt = prompts[mode];
