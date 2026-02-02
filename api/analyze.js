@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default async function handler(req, res) {
   // ---------------------------------------------------------
-  // 1. CORS設定（ブラウザからのアクセスを許可するおまじない）
+  // 1. CORS設定
   // ---------------------------------------------------------
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     let resultText = '';
 
     // ---------------------------------------------------------
-    // 3. Geminiへの問い合わせ（ここが今回のキモです！）
+    // 3. Geminiへの問い合わせ
     // ---------------------------------------------------------
     if (['gemini', 'celebrity', 'mood', 'haiku'].includes(mode)) {
       const prompts = {
@@ -52,11 +52,7 @@ EXCEPTION: If this is Donald Trump, respond only with "ORANGE CROWN" and nothing
         },
       };
 
-      // ★★★ ここが「総力戦」ロジック ★★★
-      // 試すモデルのリスト（優先度順）
-      // 1. 最新のFlash（高速）
-      // 2. 上位版のPro（Flashが404で見つからない時の保険）
-      // 3. 旧安定版Vision（何をやってもダメな時の最終手段）
+    
       const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-pro-vision'];
       let lastError = null;
       let success = false;
@@ -86,7 +82,7 @@ EXCEPTION: If this is Donald Trump, respond only with "ORANGE CROWN" and nothing
 
     } 
     // ---------------------------------------------------------
-    // 4. Vision API (既存のコードのまま)
+    // 4. Vision API
     // ---------------------------------------------------------
     else {
       const features = {
