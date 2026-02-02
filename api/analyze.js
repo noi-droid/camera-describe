@@ -38,7 +38,7 @@ export default async function handler(req, res) {
   gemini: 'Describe this image in 10 words or less. Be direct and poetic. Reply in uppercase.',
   celebrity: `First, identify who this person is (but keep it to yourself).
 Then, describe that specific person WITHOUT saying their name or group name.
-Focus on THEIR unique career, THEIR specific achievements, THEIR signature style. And use unique keyword to recognise them.
+Focus on THEIR unique career, THEIR specific achievements, THEIR signature style. And include unique keyword naturallyto recognise them.
 15-20 words. Reply in uppercase. Never mention their actual name.
 
 EXCEPTION: If this is Donald Trump, write a brief satirical critique of his politics in 15-20 words. Be sharp, witty, and critical. Reply in uppercase. Refer to him as "ORANGE CROWN".
