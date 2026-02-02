@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     // ---------------------------------------------------------
     // 3. Geminiへの問い合わせ
     // ---------------------------------------------------------
-    if (['gemini', 'describe', 'mood', 'haiku'].includes(mode)) {
+    if (['gemini', 'celebrity', 'mood', 'haiku'].includes(mode)) {
       const prompts = {
   gemini: 'Describe this image in 10 words or less. Be direct and poetic. Reply in uppercase.',
   celebrity: `If you recognize this person, describe them WITHOUT naming them. Focus on what they are known for, their style, their vibe, or their legacy. Be poetic and indirect. 15-20 words. Reply in uppercase. Never mention their name.
