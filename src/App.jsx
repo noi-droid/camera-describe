@@ -8,6 +8,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('gemini');
   const [dots, setDots] = useState('');
+  const [transitioning, setTransitioning] = useState(false);
   
   // カメラ設定
   const [facingMode, setFacingMode] = useState('environment');
@@ -47,7 +48,6 @@ function App() {
       return;
     }
     
-    // DONALD TRUMPを置換
     let processedResult = result;
     if (mode === 'celebrity') {
       processedResult = result.replace(/DONALD TRUMP/gi, 'ORANGE CROWN');
@@ -92,8 +92,6 @@ function App() {
       setCapabilities(caps);
       
       setIsStreaming(true);
-      setCapturedImage(null);
-      setResult(null);
     } catch (e) {
       console.error('Camera access denied:', e);
     }
@@ -181,11 +179,9 @@ function App() {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0);
     
-    // APIに送る用（フィルターなし）
     const rawImageData = canvas.toDataURL('image/jpeg', 0.8);
     const base64Image = rawImageData.replace(/^data:image\/\w+;base64,/, '');
     
-    // 表示用（フィルターあり）
     applyFilters(canvas, ctx);
     const filteredImageData = canvas.toDataURL('image/jpeg', 0.8);
     
@@ -204,11 +200,21 @@ function App() {
     setLoading(false);
   };
 
-  const reset = () => {
-    setCapturedImage(null);
-    setResult(null);
+  const reset = async () => {
     setZoom(1);
-    startCamera();
+    setResult(null);
+    
+    // フェードアウト開始
+    setTransitioning(true);
+    
+    // カメラを先に起動
+    await startCamera();
+    
+    // 少し待ってからフェードアウト完了
+    setTimeout(() => {
+      setCapturedImage(null);
+      setTransitioning(false);
+    }, 300);
   };
 
   const cycleMode = () => {
@@ -265,9 +271,12 @@ function App() {
       {/* Captured image with overlay */}
       {capturedImage && (
         <div style={{
-          position: 'relative',
+          position: 'absolute',
           width: '100vw',
           height: '100vh',
+          opacity: transitioning ? 0 : 1,
+          transition: 'opacity 0.3s ease-out',
+          zIndex: 5,
         }}>
           <img
             src={capturedImage}
@@ -280,7 +289,7 @@ function App() {
           />
           
           {/* Result overlay */}
-          {result && (
+          {result && !transitioning && (
             <div style={{
               position: 'absolute',
               inset: 0,
@@ -459,7 +468,7 @@ function App() {
       )}
 
       {/* Capture button */}
-      {isStreaming && (
+      {isStreaming && !capturedImage && (
         <button
           onClick={captureAndAnalyze}
           style={{
@@ -480,7 +489,7 @@ function App() {
       )}
 
       {/* Reset button */}
-      {capturedImage && !loading && (
+      {capturedImage && !loading && !transitioning && (
         <button
           onClick={reset}
           style={{
