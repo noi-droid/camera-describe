@@ -200,22 +200,24 @@ function App() {
     setLoading(false);
   };
 
-  const reset = async () => {
-    setZoom(1);
-    setResult(null);
-    
-    // フェードアウト開始
-    setTransitioning(true);
-    
-    // カメラを先に起動
-    await startCamera();
-    
-    // 少し待ってからフェードアウト完了
-    setTimeout(() => {
-      setCapturedImage(null);
-      setTransitioning(false);
-    }, 300);
-  };
+  const reset = () => {
+  setZoom(1);
+  setResult(null);
+  
+  // カメラを起動（画像はまだ残す）
+  startCamera().then(() => {
+    // videoが実際に再生開始したらフェードアウト
+    if (videoRef.current) {
+      videoRef.current.onplaying = () => {
+        setTransitioning(true);
+        setTimeout(() => {
+          setCapturedImage(null);
+          setTransitioning(false);
+        }, 300);
+      };
+    }
+  });
+};
 
   const cycleMode = () => {
     const modes = ['gemini', 'celebrity', 'mood', 'haiku', 'labels', 'text', 'faces'];
