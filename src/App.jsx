@@ -98,15 +98,6 @@ function App() {
     }
   };
 
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-      trackRef.current = null;
-    }
-    setIsStreaming(false);
-  };
-
   const applySettings = async (settings) => {
     if (!trackRef.current) return;
     try {
@@ -141,14 +132,14 @@ function App() {
     }
 
     if (grain > 0) {
-  const intensity = grain / 100 * 160; // 80 → 160 に変更
-  for (let i = 0; i < data.length; i += 4) {
-    const noise = (Math.random() - 0.5) * intensity;
-    data[i] = Math.min(255, Math.max(0, data[i] + noise));
-    data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
-    data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
-  }
-}
+      const intensity = grain / 100 * 160;
+      for (let i = 0; i < data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * intensity;
+        data[i] = Math.min(255, Math.max(0, data[i] + noise));
+        data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
+        data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
+      }
+    }
 
     ctx.putImageData(imageData, 0, 0);
   };
@@ -187,7 +178,6 @@ function App() {
     const filteredImageData = canvas.toDataURL('image/jpeg', 0.8);
     
     setCapturedImage(filteredImageData);
-    // カメラは止めない！
     setLoading(true);
 
     try {
@@ -201,10 +191,46 @@ function App() {
     setLoading(false);
   };
 
+  const saveImage = () => {
+    if (!capturedImage || !displayedResult) return;
+
+    const canvas = document.createElement('canvas');
+    const img = new Image();
+    
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      const ctx = canvas.getContext('2d');
+      
+      ctx.drawImage(img, 0, 0);
+      
+      const fontSize = Math.min(canvas.width * 0.12, 120);
+      ctx.font = `400 ${fontSize}px "OTR Grotesk", system-ui, sans-serif`;
+      ctx.fillStyle = 'rgb(0, 255, 0)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      const lines = displayedResult.split('\n');
+      const lineHeight = fontSize * 0.9;
+      const startY = canvas.height / 2 - (lines.length - 1) * lineHeight / 2;
+      
+      lines.forEach((line, i) => {
+        ctx.fillText(line, canvas.width / 2, startY + i * lineHeight);
+      });
+      
+      const link = document.createElement('a');
+      link.download = `camera-describe-${Date.now()}.jpg`;
+      link.href = canvas.toDataURL('image/jpeg', 0.9);
+      link.click();
+    };
+    
+    img.src = capturedImage;
+  };
+
   const reset = () => {
     setCapturedImage(null);
     setResult(null);
-    // カメラは既に動いてるから再起動不要
   };
 
   const cycleMode = () => {
@@ -245,34 +271,34 @@ function App() {
       )}
 
       {/* Video preview */}
-<video
-  ref={videoRef}
-  autoPlay
-  playsInline
-  style={{
-    display: isStreaming ? 'block' : 'none',
-    width: '100vw',
-    height: '100vh',
-    objectFit: 'cover',
-    filter: `${monochrome ? 'grayscale(100%)' : ''}`,
-  }}
-/>
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        style={{
+          display: isStreaming ? 'block' : 'none',
+          width: '100vw',
+          height: '100vh',
+          objectFit: 'cover',
+          filter: monochrome ? 'grayscale(100%)' : '',
+        }}
+      />
 
-{/* Grain overlay for preview */}
-{isStreaming && grain > 0 && (
-  <div style={{
-    position: 'absolute',
-    inset: 0,
-    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-    opacity: grain / 100 * 0.5,
-    mixBlendMode: 'overlay',
-    pointerEvents: 'none',
-    zIndex: 2,
-  }}
-/>
-)}
+      {/* Grain overlay for preview */}
+      {isStreaming && grain > 0 && !capturedImage && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          opacity: grain / 100 * 0.5,
+          mixBlendMode: 'overlay',
+          pointerEvents: 'none',
+          zIndex: 2,
+        }}
+        />
+      )}
 
-      {/* Captured image with overlay - videoの上に重ねる */}
+      {/* Captured image with overlay */}
       {capturedImage && (
         <div style={{
           position: 'absolute',
@@ -489,28 +515,48 @@ function App() {
         />
       )}
 
-      {/* Reset button */}
+      {/* Bottom buttons */}
       {capturedImage && !loading && (
-        <button
-          onClick={reset}
-          style={{
-            position: 'absolute',
-            bottom: 32,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            padding: '12px 24px',
-            backgroundColor: 'rgba(255,255,255,0.2)',
-            color: 'white',
-            fontFamily: 'monospace',
-            fontSize: 12,
-            border: 'none',
-            cursor: 'pointer',
-            zIndex: 10,
-            mixBlendMode: 'difference',
-          }}
-        >
-          AGAIN
-        </button>
+        <div style={{
+          position: 'absolute',
+          bottom: 32,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          gap: 16,
+          zIndex: 10,
+        }}>
+          <button
+            onClick={reset}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              fontFamily: 'monospace',
+              fontSize: 12,
+              border: 'none',
+              cursor: 'pointer',
+              mixBlendMode: 'difference',
+            }}
+          >
+            AGAIN
+          </button>
+          <button
+            onClick={saveImage}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              fontFamily: 'monospace',
+              fontSize: 12,
+              border: 'none',
+              cursor: 'pointer',
+              mixBlendMode: 'difference',
+            }}
+          >
+            SAVE
+          </button>
+        </div>
       )}
     </div>
   );
