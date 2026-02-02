@@ -8,7 +8,6 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('gemini');
   const [dots, setDots] = useState('');
-  const [transitioning, setTransitioning] = useState(false);
   
   // カメラ設定
   const [facingMode, setFacingMode] = useState('environment');
@@ -92,6 +91,8 @@ function App() {
       setCapabilities(caps);
       
       setIsStreaming(true);
+      setCapturedImage(null);
+      setResult(null);
     } catch (e) {
       console.error('Camera access denied:', e);
     }
@@ -140,14 +141,14 @@ function App() {
     }
 
     if (grain > 0) {
-      const intensity = grain / 100 * 80;
-      for (let i = 0; i < data.length; i += 4) {
-        const noise = (Math.random() - 0.5) * intensity;
-        data[i] = Math.min(255, Math.max(0, data[i] + noise));
-        data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
-        data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
-      }
-    }
+  const intensity = grain / 100 * 160; // 80 → 160 に変更
+  for (let i = 0; i < data.length; i += 4) {
+    const noise = (Math.random() - 0.5) * intensity;
+    data[i] = Math.min(255, Math.max(0, data[i] + noise));
+    data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
+    data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
+  }
+}
 
     ctx.putImageData(imageData, 0, 0);
   };
@@ -186,7 +187,7 @@ function App() {
     const filteredImageData = canvas.toDataURL('image/jpeg', 0.8);
     
     setCapturedImage(filteredImageData);
-    stopCamera();
+    // カメラは止めない！
     setLoading(true);
 
     try {
@@ -201,23 +202,10 @@ function App() {
   };
 
   const reset = () => {
-  setZoom(1);
-  setResult(null);
-  
-  // カメラを起動（画像はまだ残す）
-  startCamera().then(() => {
-    // videoが実際に再生開始したらフェードアウト
-    if (videoRef.current) {
-      videoRef.current.onplaying = () => {
-        setTransitioning(true);
-        setTimeout(() => {
-          setCapturedImage(null);
-          setTransitioning(false);
-        }, 300);
-      };
-    }
-  });
-};
+    setCapturedImage(null);
+    setResult(null);
+    // カメラは既に動いてるから再起動不要
+  };
 
   const cycleMode = () => {
     const modes = ['gemini', 'celebrity', 'mood', 'haiku', 'labels', 'text', 'faces'];
@@ -256,7 +244,7 @@ function App() {
         </button>
       )}
 
-      {/* Video preview */}
+      {/* Video preview - 常に表示（撮影後も裏で動いてる） */}
       <video
         ref={videoRef}
         autoPlay
@@ -270,14 +258,11 @@ function App() {
         }}
       />
 
-      {/* Captured image with overlay */}
+      {/* Captured image with overlay - videoの上に重ねる */}
       {capturedImage && (
         <div style={{
           position: 'absolute',
-          width: '100vw',
-          height: '100vh',
-          opacity: transitioning ? 0 : 1,
-          transition: 'opacity 0.3s ease-out',
+          inset: 0,
           zIndex: 5,
         }}>
           <img
@@ -291,7 +276,7 @@ function App() {
           />
           
           {/* Result overlay */}
-          {result && !transitioning && (
+          {result && (
             <div style={{
               position: 'absolute',
               inset: 0,
@@ -365,7 +350,7 @@ function App() {
       </button>
 
       {/* Settings button */}
-      {isStreaming && (
+      {isStreaming && !capturedImage && (
         <button
           onClick={() => setShowSettings(!showSettings)}
           style={{
@@ -388,7 +373,7 @@ function App() {
       )}
 
       {/* Camera toggle button */}
-      {isStreaming && (
+      {isStreaming && !capturedImage && (
         <button
           onClick={toggleCamera}
           style={{
@@ -411,7 +396,7 @@ function App() {
       )}
 
       {/* Settings panel */}
-      {isStreaming && showSettings && (
+      {isStreaming && !capturedImage && showSettings && (
         <div style={{
           position: 'absolute',
           top: 60,
@@ -491,7 +476,7 @@ function App() {
       )}
 
       {/* Reset button */}
-      {capturedImage && !loading && !transitioning && (
+      {capturedImage && !loading && (
         <button
           onClick={reset}
           style={{
