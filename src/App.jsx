@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import html2canvas from 'html2canvas';
 
 function App() {
   const [isStreaming, setIsStreaming] = useState(false);
@@ -191,45 +192,18 @@ function App() {
     setLoading(false);
   };
 
-  const saveImage = () => {
-  if (!capturedImage || !displayedResult) return;
-
-  const canvas = document.createElement('canvas');
-  const img = new Image();
-  
-  img.onload = () => {
-    canvas.width = img.width;
-    canvas.height = img.height;
+  const saveImage = async () => {
+    const element = document.querySelector('[data-capture]');
+    if (!element) return;
     
-    const ctx = canvas.getContext('2d');
-    
-    ctx.drawImage(img, 0, 0);
-    
-    const lines = displayedResult.split('\n');
-    const fontSize = Math.min(canvas.width * 0.12, 120);
-    const lineHeight = fontSize * 1.1;
-    
-    ctx.font = `400 ${fontSize}px "OTR Grotesk", system-ui, sans-serif`;
-    ctx.fillStyle = 'rgb(0, 255, 0)';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    // 全体の高さを計算して中央に配置
-    const totalHeight = lines.length * lineHeight;
-    const startY = (canvas.height - totalHeight) / 2 + lineHeight / 2;
-    
-    lines.forEach((line, i) => {
-      ctx.fillText(line, canvas.width / 2, startY + i * lineHeight);
+    const canvas = await html2canvas(element, {
+      backgroundColor: null,
     });
-    
     const link = document.createElement('a');
     link.download = `camera-describe-${Date.now()}.jpg`;
     link.href = canvas.toDataURL('image/jpeg', 0.9);
     link.click();
   };
-  
-  img.src = capturedImage;
-};
 
   const reset = () => {
     setCapturedImage(null);
@@ -308,40 +282,47 @@ function App() {
           inset: 0,
           zIndex: 5,
         }}>
-          <img
-            src={capturedImage}
-            alt="Captured"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-            }}
-          />
-          
-          {/* Result overlay */}
-          {result && (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 32,
-            }}>
+          {/* キャプチャ範囲 */}
+          <div data-capture style={{
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+          }}>
+            <img
+              src={capturedImage}
+              alt="Captured"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+            
+            {/* Result overlay */}
+            {result && (
               <div style={{
-                fontFamily: '"OTR Grotesk", system-ui, sans-serif',
-                fontWeight: 400,
-                fontSize: 'clamp(36px, 12vw, 120px)',
-                color: 'rgb(0, 255, 0)',
-                textAlign: 'center',
-                lineHeight: 0.9,
-                letterSpacing: '-0.01em',
-                whiteSpace: 'pre-wrap',
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 32,
               }}>
-                {displayedResult}
+                <div style={{
+                  fontFamily: '"OTR Grotesk", system-ui, sans-serif',
+                  fontWeight: 400,
+                  fontSize: 'clamp(36px, 12vw, 120px)',
+                  color: 'rgb(0, 255, 0)',
+                  textAlign: 'center',
+                  lineHeight: 0.9,
+                  letterSpacing: '-0.01em',
+                  whiteSpace: 'pre-wrap',
+                }}>
+                  {displayedResult}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
