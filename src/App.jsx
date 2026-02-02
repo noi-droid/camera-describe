@@ -192,41 +192,44 @@ function App() {
   };
 
   const saveImage = () => {
-    if (!capturedImage || !displayedResult) return;
+  if (!capturedImage || !displayedResult) return;
 
-    const canvas = document.createElement('canvas');
-    const img = new Image();
+  const canvas = document.createElement('canvas');
+  const img = new Image();
+  
+  img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
     
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      
-      const ctx = canvas.getContext('2d');
-      
-      ctx.drawImage(img, 0, 0);
-      
-      const fontSize = Math.min(canvas.width * 0.12, 120);
-      ctx.font = `400 ${fontSize}px "OTR Grotesk", system-ui, sans-serif`;
-      ctx.fillStyle = 'rgb(0, 255, 0)';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
-      const lines = displayedResult.split('\n');
-      const lineHeight = fontSize * 0.9;
-      const startY = canvas.height / 2 - (lines.length - 1) * lineHeight / 2;
-      
-      lines.forEach((line, i) => {
-        ctx.fillText(line, canvas.width / 2, startY + i * lineHeight);
-      });
-      
-      const link = document.createElement('a');
-      link.download = `camera-describe-${Date.now()}.jpg`;
-      link.href = canvas.toDataURL('image/jpeg', 0.9);
-      link.click();
-    };
+    const ctx = canvas.getContext('2d');
     
-    img.src = capturedImage;
+    ctx.drawImage(img, 0, 0);
+    
+    const lines = displayedResult.split('\n');
+    const fontSize = Math.min(canvas.width * 0.12, 120);
+    const lineHeight = fontSize * 1.1;
+    
+    ctx.font = `400 ${fontSize}px "OTR Grotesk", system-ui, sans-serif`;
+    ctx.fillStyle = 'rgb(0, 255, 0)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // 全体の高さを計算して中央に配置
+    const totalHeight = lines.length * lineHeight;
+    const startY = (canvas.height - totalHeight) / 2 + lineHeight / 2;
+    
+    lines.forEach((line, i) => {
+      ctx.fillText(line, canvas.width / 2, startY + i * lineHeight);
+    });
+    
+    const link = document.createElement('a');
+    link.download = `camera-describe-${Date.now()}.jpg`;
+    link.href = canvas.toDataURL('image/jpeg', 0.9);
+    link.click();
   };
+  
+  img.src = capturedImage;
+};
 
   const reset = () => {
     setCapturedImage(null);
