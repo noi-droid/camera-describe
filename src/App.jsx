@@ -198,13 +198,13 @@ function App() {
   
   const canvas = await html2canvas(element, {
     backgroundColor: null,
-    scale: 2,
+    scale: 3, // さらに高解像度に
   });
   
   // Web Share APIが使えるか確認（iOS Safari対応）
   if (navigator.share && navigator.canShare) {
     canvas.toBlob(async (blob) => {
-      const file = new File([blob], `camera-describe-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      const file = new File([blob], `camera-describe-${Date.now()}.png`, { type: 'image/png' });
       
       if (navigator.canShare({ files: [file] })) {
         try {
@@ -216,12 +216,12 @@ function App() {
           console.log('Share cancelled');
         }
       }
-    }, 'image/jpeg', 0.95);
+    }, 'image/png');
   } else {
     // フォールバック：ダウンロードリンク
     const link = document.createElement('a');
-    link.download = `camera-describe-${Date.now()}.jpg`;
-    link.href = canvas.toDataURL('image/jpeg', 0.95);
+    link.download = `camera-describe-${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
     link.click();
   }
 };
