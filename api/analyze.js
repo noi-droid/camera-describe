@@ -36,9 +36,14 @@ export default async function handler(req, res) {
     if (['gemini', 'celebrity', 'mood', 'haiku'].includes(mode)) {
       const prompts = {
   gemini: 'Describe this image in 10 words or less. Be direct and poetic. Reply in uppercase.',
-  celebrity: `If you recognize this person, describe them WITHOUT naming them. Focus on what they are known for, their style, their vibe, or their legacy. Be poetic and indirect. 15-20 words. Reply in uppercase. Never mention their name.
+  celebrity: `First, identify who this person is (but keep it to yourself).
+Then, describe that specific person WITHOUT saying their name.
+Focus on THEIR unique career, THEIR specific achievements, THEIR signature style.
+15-20 words. Reply in uppercase. Never mention their actual name.
 
-EXCEPTION: If this is Donald Trump, write a brief satirical critique of his politics in 15-20 words. Be sharp, witty, and critical. Mention things like ego, lies, division, or chaos. Reply in uppercase. Never use his name - refer to him as "ORANGE CROWN" instead.`,
+EXCEPTION: If this is Donald Trump, write a brief satirical critique of his politics in 15-20 words. Be sharp, witty, and critical. Reply in uppercase. Refer to him as "ORANGE CROWN".
+
+If you don't recognize the person, say "A STRANGER IN THE FRAME".`,
   mood: 'Describe the mood or atmosphere of this image in 5 words or less. Reply in uppercase.',
   haiku: 'Write a haiku about this image. Reply in uppercase.',
 };
