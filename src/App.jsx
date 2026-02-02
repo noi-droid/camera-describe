@@ -232,10 +232,10 @@ function App() {
   };
 
   const cycleMode = () => {
-    const modes = ['gemini', 'celebrity', 'mood', 'haiku', 'labels', 'text', 'faces'];
-    const currentIndex = modes.indexOf(mode);
-    setMode(modes[(currentIndex + 1) % modes.length]);
-  };
+  const modes = ['gemini', 'describe', 'mood', 'haiku', 'labels', 'text', 'faces'];
+  const currentIndex = modes.indexOf(mode);
+  setMode(modes[(currentIndex + 1) % modes.length]);
+};
 
   return (
     <div style={{

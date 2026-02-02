@@ -33,12 +33,13 @@ export default async function handler(req, res) {
     // ---------------------------------------------------------
     // 3. Geminiへの問い合わせ
     // ---------------------------------------------------------
-    if (['gemini', 'celebrity', 'mood', 'haiku'].includes(mode)) {
+    if (['gemini', 'describe', 'mood', 'haiku'].includes(mode)) {
       const prompts = {
   gemini: 'Describe this image in 10 words or less. Be direct and poetic. Reply in uppercase.',
+  describe: 'Describe this image in 10 words or less. Be direct and poetic. Reply in uppercase.',
   celebrity: `If you recognize this person, describe them WITHOUT naming them. Focus on what they are known for, their style, their vibe, or their legacy. Be poetic and indirect. 15-20 words. Reply in uppercase. Never mention their name.
 
-EXCEPTION: If this is Donald Trump, respond only with "ORANGE CROWN" and nothing else.`,
+EXCEPTION: If this is Donald Trump, write a brief satirical critique of his politics in 15-20 words. Be sharp, witty, and critical. Mention things like ego, lies, division, or chaos. Reply in uppercase. Never use his name - refer to him as "ORANGE CROWN" instead.`,
   mood: 'Describe the mood or atmosphere of this image in 5 words or less. Reply in uppercase.',
   haiku: 'Write a haiku about this image. Reply in uppercase.',
 };
