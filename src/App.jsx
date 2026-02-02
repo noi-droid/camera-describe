@@ -244,19 +244,33 @@ function App() {
         </button>
       )}
 
-      {/* Video preview - 常に表示（撮影後も裏で動いてる） */}
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        style={{
-          display: isStreaming ? 'block' : 'none',
-          width: '100vw',
-          height: '100vh',
-          objectFit: 'cover',
-          filter: `${monochrome ? 'grayscale(100%)' : ''} ${grain > 0 ? `contrast(${100 + grain * 0.2}%)` : ''}`,
-        }}
-      />
+      {/* Video preview */}
+<video
+  ref={videoRef}
+  autoPlay
+  playsInline
+  style={{
+    display: isStreaming ? 'block' : 'none',
+    width: '100vw',
+    height: '100vh',
+    objectFit: 'cover',
+    filter: `${monochrome ? 'grayscale(100%)' : ''}`,
+  }}
+/>
+
+{/* Grain overlay for preview */}
+{isStreaming && grain > 0 && (
+  <div style={{
+    position: 'absolute',
+    inset: 0,
+    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+    opacity: grain / 100 * 0.5,
+    mixBlendMode: 'overlay',
+    pointerEvents: 'none',
+    zIndex: 2,
+  }}
+/>
+)}
 
       {/* Captured image with overlay - videoの上に重ねる */}
       {capturedImage && (
