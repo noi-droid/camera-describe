@@ -332,7 +332,7 @@ function App() {
                 <div style={{
                   fontFamily: '"OTR Grotesk", system-ui, sans-serif',
                   fontWeight: 400,
-                  fontSize: 'clamp(24px, 6vw, 60px)',
+                  fontSize: 'clamp(24px, 8vw, 80px)',
                   color: 'rgb(0, 255, 0)',
                   textAlign: 'center',
                   lineHeight: 0.9,
