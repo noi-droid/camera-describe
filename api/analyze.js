@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       const prompts = {
   gemini: 'Describe this image in 10 words or less. Be direct and poetic. Reply in uppercase.',
   celebrity: `First, identify who this person is (but keep it to yourself).
-Then, describe that specific person WITHOUT saying their name or group.
+Then, describe that specific person WITHOUT saying their name or group name.
 Focus on THEIR unique career, THEIR specific achievements, THEIR signature style. And use unique keyword to recognise them.
 15-20 words. Reply in uppercase. Never mention their actual name.
 
