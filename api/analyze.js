@@ -5,33 +5,21 @@ const JARVIS_PROMPT = `You are the JARVIS COCKER DETECTATOR. Decide whether the 
 Return JSON exactly in this shape:
 {
   "verdict": "JARVIS" or "NOT JARVIS" or "NO COCKER IN FRAME",
-  "comment": "ONE DRY WITTY LINE, 5 TO 12 WORDS, ALL UPPERCASE",
-  "box": [ymin, xmin, ymax, xmax] in 0-1000 normalized coordinates of the FACE you judged, OR null if no person
+  "comment": "ONE DRY WITTY LINE, 5 TO 12 WORDS, ALL UPPERCASE"
 }
 
 Rules for verdict:
 - "JARVIS" only if you genuinely believe this is Jarvis Cocker (high confidence).
 - "NOT JARVIS" if it is clearly a different person.
 - "NO COCKER IN FRAME" if no human face is visible at all.
+- If multiple people are in frame, judge ONLY the most prominent face.
 
 Rules for comment:
 - JARVIS: mild surprise, restrained respect.
 - NOT JARVIS: name one feature that fits and one that doesn't, OR be wittily dismissive.
 - NO COCKER IN FRAME: a witty line about what IS in the frame instead.
 - Subtle nods to Pulp's persona, Sheffield or 90s Britpop are allowed but RARE.
-- NEVER quote song lyrics, never name songs or albums, never name other band members.
-
-Rules for box:
-- A TIGHT rectangle around the FACE you judged (just the head, not the body, not the shoulders).
-- If multiple people in frame, judge ONLY the most prominent face and box ONLY that one face.
-- Format: [ymin, xmin, ymax, xmax]
-  - ymin = TOP edge of the face, vertical position normalized so 0 is the top of the image and 1000 is the bottom.
-  - xmin = LEFT edge of the face, horizontal position normalized so 0 is the left of the image and 1000 is the right.
-  - ymax = BOTTOM edge of the face (ymax > ymin).
-  - xmax = RIGHT edge of the face (xmax > xmin).
-- Every coordinate must be in the integer range [0, 1000].
-- Be precise: measure the actual rectangle around the face you see.
-- null if no person.`;
+- NEVER quote song lyrics, never name songs or albums, never name other band members.`;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -92,16 +80,13 @@ export default async function handler(req, res) {
       parsed = JSON.parse(rawText);
     } catch (e) {
       console.warn('Failed to parse JSON, raw was:', rawText);
-      parsed = { verdict: 'ERROR', comment: 'UNREADABLE RESPONSE', box: null };
+      parsed = { verdict: 'ERROR', comment: 'UNREADABLE RESPONSE' };
     }
 
     const verdict = String(parsed.verdict || '').toUpperCase().trim();
     const comment = String(parsed.comment || '').toUpperCase().trim();
-    const box = Array.isArray(parsed.box) && parsed.box.length === 4
-      ? parsed.box.map((n) => Number(n))
-      : null;
 
-    res.status(200).json({ result: { verdict, comment, box } });
+    res.status(200).json({ result: { verdict, comment } });
   } catch (error) {
     console.error('Final API Error:', error);
     res.status(500).json({ error: error.message || 'Server Error' });

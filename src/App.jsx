@@ -197,7 +197,7 @@ function App() {
       setResult(apiResult);
     } catch (e) {
       console.error('API error:', e);
-      setResult({ verdict: 'ERROR', comment: '', box: null });
+      setResult({ verdict: 'ERROR', comment: '' });
     }
     
     setLoading(false);
@@ -334,7 +334,6 @@ function App() {
           verdict === 'JARVIS' ? 'rgb(0, 255, 0)'
           : verdict === 'NOT JARVIS' ? 'rgb(255, 70, 70)'
           : 'rgba(255, 255, 255, 0.85)';
-        const box = Array.isArray(result?.box) && result.box.length === 4 ? result.box : null;
 
         return (
           <div style={{
@@ -360,19 +359,6 @@ function App() {
                   maxHeight: '100vh',
                 }}
               />
-
-              {/* Bounding box on detected face */}
-              {box && (
-                <div style={{
-                  position: 'absolute',
-                  top: `${box[0] / 10}%`,
-                  left: `${box[1] / 10}%`,
-                  width: `${(box[3] - box[1]) / 10}%`,
-                  height: `${(box[2] - box[0]) / 10}%`,
-                  border: `2px solid ${verdictColor}`,
-                  pointerEvents: 'none',
-                }} />
-              )}
 
               {/* Verdict + Comment overlay */}
               {result && (
