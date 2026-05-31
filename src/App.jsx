@@ -378,15 +378,13 @@ function App() {
               {result && (
                 <div style={{
                   position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
+                  inset: 0,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  padding: '24px 16px 40px',
+                  justifyContent: 'center',
+                  padding: 24,
                   pointerEvents: 'none',
-                  background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent)',
                   lineHeight: 'normal',
                 }}>
                   <div style={{

@@ -22,9 +22,15 @@ Rules for comment:
 - NEVER quote song lyrics, never name songs or albums, never name other band members.
 
 Rules for box:
-- Tight rectangle around the FACE you judged (head only, not the whole body).
-- If multiple people in frame, judge ONLY the most prominent face.
-- Coordinates: [ymin, xmin, ymax, xmax] each in [0, 1000], normalized to the image dimensions.
+- A TIGHT rectangle around the FACE you judged (just the head, not the body, not the shoulders).
+- If multiple people in frame, judge ONLY the most prominent face and box ONLY that one face.
+- Format: [ymin, xmin, ymax, xmax]
+  - ymin = TOP edge of the face, vertical position normalized so 0 is the top of the image and 1000 is the bottom.
+  - xmin = LEFT edge of the face, horizontal position normalized so 0 is the left of the image and 1000 is the right.
+  - ymax = BOTTOM edge of the face (ymax > ymin).
+  - xmax = RIGHT edge of the face (xmax > xmin).
+- Every coordinate must be in the integer range [0, 1000].
+- Be precise: measure the actual rectangle around the face you see.
 - null if no person.`;
 
 export default async function handler(req, res) {
@@ -54,7 +60,7 @@ export default async function handler(req, res) {
       inlineData: { data: base64Image, mimeType: 'image/jpeg' },
     };
 
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro'];
+    const modelsToTry = ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
     let rawText = '';
     let lastError = null;
     let success = false;
