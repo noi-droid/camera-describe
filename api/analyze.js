@@ -46,7 +46,7 @@ export default async function handler(req, res) {
       inlineData: { data: base64Image, mimeType: 'image/jpeg' },
     };
 
-    const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-pro-vision'];
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro'];
     let resultText = '';
     let lastError = null;
     let success = false;
