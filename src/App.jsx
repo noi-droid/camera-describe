@@ -7,7 +7,6 @@ function App() {
   const [result, setResult] = useState(null);
   const [displayedResult, setDisplayedResult] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState('gemini');
   const [dots, setDots] = useState('');
   
   // カメラ設定
@@ -47,26 +46,21 @@ function App() {
       setDisplayedResult('');
       return;
     }
-    
-    let processedResult = result;
-    if (mode === 'celebrity') {
-      processedResult = result.replace(/DONALD TRUMP/gi, 'ORANGE CROWN');
-    }
-    
+
     setDisplayedResult('');
     let index = 0;
-    
+
     const interval = setInterval(() => {
-      if (index < processedResult.length) {
-        setDisplayedResult(processedResult.slice(0, index + 1));
+      if (index < result.length) {
+        setDisplayedResult(result.slice(0, index + 1));
         index++;
       } else {
         clearInterval(interval);
       }
     }, 50);
-    
+
     return () => clearInterval(interval);
-  }, [result, mode]);
+  }, [result]);
 
   const startCamera = async (facing = facingMode) => {
     try {
@@ -149,7 +143,7 @@ function App() {
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ base64Image, mode }),
+      body: JSON.stringify({ base64Image }),
     });
 
     if (!response.ok) {
@@ -195,17 +189,16 @@ function App() {
   const saveImage = async () => {
   const element = document.querySelector('[data-capture]');
   if (!element) return;
-  
+
   const canvas = await html2canvas(element, {
     backgroundColor: null,
-    scale: 3, // さらに高解像度に
+    scale: 3,
   });
-  
-  // Web Share APIが使えるか確認（iOS Safari対応）
+
   if (navigator.share && navigator.canShare) {
     canvas.toBlob(async (blob) => {
-      const file = new File([blob], `camera-describe-${Date.now()}.png`, { type: 'image/png' });
-      
+      const file = new File([blob], `jarvis-detectator-${Date.now()}.png`, { type: 'image/png' });
+
       if (navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
@@ -218,9 +211,8 @@ function App() {
       }
     }, 'image/png');
   } else {
-    // フォールバック：ダウンロードリンク
     const link = document.createElement('a');
-    link.download = `camera-describe-${Date.now()}.png`;
+    link.download = `jarvis-detectator-${Date.now()}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   }
@@ -229,12 +221,6 @@ function App() {
   const reset = () => {
     setCapturedImage(null);
     setResult(null);
-  };
-
-  const cycleMode = () => {
-    const modes = ['gemini', 'celebrity', 'mood', 'haiku', 'labels', 'text', 'faces'];
-    const currentIndex = modes.indexOf(mode);
-    setMode(modes[(currentIndex + 1) % modes.length]);
   };
 
   return (
@@ -250,22 +236,50 @@ function App() {
       
       {/* Start button */}
       {!isStreaming && !capturedImage && (
-        <button
-          onClick={() => startCamera()}
-          style={{
-            padding: '16px 32px',
-            backgroundColor: 'white',
-            color: 'black',
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 32,
+          padding: 24,
+        }}>
+          <div style={{
             fontFamily: '"OTR Grotesk", system-ui, sans-serif',
-            fontSize: 14,
-            fontWeight: 600,
-            letterSpacing: '0.05em',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          TAP TO START
-        </button>
+            color: 'rgb(0, 255, 0)',
+            fontWeight: 700,
+            fontSize: 'clamp(36px, 10vw, 96px)',
+            lineHeight: 0.9,
+            letterSpacing: '-0.02em',
+            textAlign: 'center',
+          }}>
+            JARVIS COCKER<br />DETECTATOR
+          </div>
+          <div style={{
+            fontFamily: 'monospace',
+            color: 'rgba(255,255,255,0.5)',
+            fontSize: 11,
+            letterSpacing: '0.15em',
+            textAlign: 'center',
+          }}>
+            A SHEFFIELD-AGNOSTIC RESEMBLANCE ENGINE
+          </div>
+          <button
+            onClick={() => startCamera()}
+            style={{
+              padding: '16px 32px',
+              backgroundColor: 'white',
+              color: 'black',
+              fontFamily: '"OTR Grotesk", system-ui, sans-serif',
+              fontSize: 14,
+              fontWeight: 600,
+              letterSpacing: '0.05em',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            TAP TO DETECT
+          </button>
+        </div>
       )}
 
       {/* Video preview */}
@@ -365,7 +379,7 @@ function App() {
             color: 'rgb(0, 255, 0)',
             letterSpacing: '0.05em',
           }}>
-            THINKING{dots}
+            DETECTING{dots}
           </div>
         </div>
       )}
@@ -373,26 +387,26 @@ function App() {
       {/* Hidden canvas */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {/* Mode button */}
-      <button
-        onClick={cycleMode}
-        style={{
-          position: 'absolute',
-          top: 16,
-          left: 16,
-          padding: '8px 16px',
-          backgroundColor: 'rgba(255,255,255,0.0)',
-          color: 'white',
-          fontFamily: 'monospace',
-          fontSize: 12,
-          border: 'none',
-          cursor: 'pointer',
-          zIndex: 10,
-          mixBlendMode: 'difference',
-        }}
-      >
-        {mode.toUpperCase()}
-      </button>
+      {/* Branding label */}
+      {(isStreaming || capturedImage) && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 16,
+            left: 16,
+            padding: '8px 16px 8px 0',
+            color: 'white',
+            fontFamily: 'monospace',
+            fontSize: 12,
+            letterSpacing: '0.1em',
+            zIndex: 10,
+            mixBlendMode: 'difference',
+            pointerEvents: 'none',
+          }}
+        >
+          JARVIS DETECTATOR
+        </div>
+      )}
 
       {/* Settings button */}
       {isStreaming && !capturedImage && (
