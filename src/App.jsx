@@ -272,10 +272,10 @@ function App() {
             JARVIS COCKER<br />DETECTATOR
           </div>
           <div style={{
-            fontFamily: 'monospace',
+            fontFamily: '"OTRGrotesk-Regular", system-ui, sans-serif',
             color: 'rgba(255,255,255,0.5)',
-            fontSize: 11,
-            letterSpacing: '0.15em',
+            fontSize: 13,
+            letterSpacing: '0.1em',
             textAlign: 'center',
           }}>
             A SHEFFIELD-AGNOSTIC RESEMBLANCE ENGINE
@@ -456,9 +456,9 @@ function App() {
             left: 16,
             padding: '8px 16px 8px 0',
             color: 'white',
-            fontFamily: 'monospace',
-            fontSize: 12,
-            letterSpacing: '0.1em',
+            fontFamily: '"OTRGrotesk-Regular", system-ui, sans-serif',
+            fontSize: 14,
+            letterSpacing: '0.05em',
             zIndex: 10,
             mixBlendMode: 'difference',
             pointerEvents: 'none',
