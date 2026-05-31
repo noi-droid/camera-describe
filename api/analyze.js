@@ -1,23 +1,31 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const JARVIS_PROMPT = `You are the JARVIS COCKER DETECTATOR. You judge how closely the person in the photo resembles Jarvis Cocker — frontman of the British band Pulp. Known traits: lanky build, dark wavy hair, large-framed glasses, mid-century corduroy/velvet wardrobe, Sheffield-born intellectual wit.
+const JARVIS_PROMPT = `You are the JARVIS COCKER DETECTATOR. Decide whether the most prominent person in the photo IS Jarvis Cocker or NOT. Jarvis Cocker: frontman of British band Pulp — lanky build, dark wavy hair, large-framed glasses, mid-century corduroy/velvet wardrobe, Sheffield-born intellectual wit.
 
-Reply in EXACTLY this format, all uppercase, no extra lines, no prefix:
-JARVIS MATCH: XX%
-[ONE DRY WITTY LINE, 5 TO 12 WORDS]
+Return JSON exactly in this shape:
+{
+  "verdict": "JARVIS" or "NOT JARVIS" or "NO COCKER IN FRAME",
+  "comment": "ONE DRY WITTY LINE, 5 TO 12 WORDS, ALL UPPERCASE",
+  "box": [ymin, xmin, ymax, xmax] in 0-1000 normalized coordinates of the FACE you judged, OR null if no person
+}
 
-Rules for the comment line:
-- Be dry, sharp, specific to what you see in the photo.
-- Subtle nods to Pulp's persona, era or aesthetic are allowed but RARE. Never quote song lyrics. Never name a song or album. Never name other band members.
-- 80% and above: mildly impressed, almost begrudging.
-- 40 to 79%: name one feature that fits and one that doesn't.
-- Below 40%: wittily dismissive without being cruel.
+Rules for verdict:
+- "JARVIS" only if you genuinely believe this is Jarvis Cocker (high confidence).
+- "NOT JARVIS" if it is clearly a different person.
+- "NO COCKER IN FRAME" if no human face is visible at all.
 
-Edge cases:
-- If the actual Jarvis Cocker appears, match must be 95% or higher.
-- If no person is visible at all, reply with just one line: NO COCKER IN FRAME
-- If multiple people, judge the most prominent face.
-- If the subject is an animal, an object, or a drawing, you can be playful but still give a low percentage and one witty line.`;
+Rules for comment:
+- JARVIS: mild surprise, restrained respect.
+- NOT JARVIS: name one feature that fits and one that doesn't, OR be wittily dismissive.
+- NO COCKER IN FRAME: a witty line about what IS in the frame instead.
+- Subtle nods to Pulp's persona, Sheffield or 90s Britpop are allowed but RARE.
+- NEVER quote song lyrics, never name songs or albums, never name other band members.
+
+Rules for box:
+- Tight rectangle around the FACE you judged (head only, not the whole body).
+- If multiple people in frame, judge ONLY the most prominent face.
+- Coordinates: [ymin, xmin, ymax, xmax] each in [0, 1000], normalized to the image dimensions.
+- null if no person.`;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -47,17 +55,20 @@ export default async function handler(req, res) {
     };
 
     const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro'];
-    let resultText = '';
+    let rawText = '';
     let lastError = null;
     let success = false;
 
     for (const modelName of modelsToTry) {
       try {
         console.log(`Trying model: ${modelName} ...`);
-        const model = genAI.getGenerativeModel({ model: modelName });
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: { responseMimeType: 'application/json' },
+        });
         const result = await model.generateContent([JARVIS_PROMPT, imagePart]);
         const response = await result.response;
-        resultText = response.text().toUpperCase().trim();
+        rawText = response.text();
         success = true;
         break;
       } catch (e) {
@@ -70,7 +81,21 @@ export default async function handler(req, res) {
       throw new Error(`All models failed. Last error: ${lastError?.message}`);
     }
 
-    res.status(200).json({ result: resultText });
+    let parsed;
+    try {
+      parsed = JSON.parse(rawText);
+    } catch (e) {
+      console.warn('Failed to parse JSON, raw was:', rawText);
+      parsed = { verdict: 'ERROR', comment: 'UNREADABLE RESPONSE', box: null };
+    }
+
+    const verdict = String(parsed.verdict || '').toUpperCase().trim();
+    const comment = String(parsed.comment || '').toUpperCase().trim();
+    const box = Array.isArray(parsed.box) && parsed.box.length === 4
+      ? parsed.box.map((n) => Number(n))
+      : null;
+
+    res.status(200).json({ result: { verdict, comment, box } });
   } catch (error) {
     console.error('Final API Error:', error);
     res.status(500).json({ error: error.message || 'Server Error' });

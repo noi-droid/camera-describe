@@ -5,7 +5,8 @@ function App() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [result, setResult] = useState(null);
-  const [displayedResult, setDisplayedResult] = useState('');
+  const [displayedVerdict, setDisplayedVerdict] = useState('');
+  const [displayedComment, setDisplayedComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [dots, setDots] = useState('');
   
@@ -40,26 +41,42 @@ function App() {
     return () => clearInterval(interval);
   }, [loading]);
 
-  // タイプライター効果
+  // タイプライター効果（判定→コメントの順）
   useEffect(() => {
     if (!result) {
-      setDisplayedResult('');
+      setDisplayedVerdict('');
+      setDisplayedComment('');
       return;
     }
 
-    setDisplayedResult('');
-    let index = 0;
+    setDisplayedVerdict('');
+    setDisplayedComment('');
 
-    const interval = setInterval(() => {
-      if (index < result.length) {
-        setDisplayedResult(result.slice(0, index + 1));
-        index++;
-      } else {
-        clearInterval(interval);
+    const verdict = result.verdict || '';
+    const comment = result.comment || '';
+    let vi = 0;
+    let ci = 0;
+    let commentInterval = null;
+
+    const verdictInterval = setInterval(() => {
+      vi++;
+      setDisplayedVerdict(verdict.slice(0, vi));
+      if (vi >= verdict.length) {
+        clearInterval(verdictInterval);
+        commentInterval = setInterval(() => {
+          ci++;
+          setDisplayedComment(comment.slice(0, ci));
+          if (ci >= comment.length) {
+            clearInterval(commentInterval);
+          }
+        }, 30);
       }
-    }, 50);
+    }, 60);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(verdictInterval);
+      if (commentInterval) clearInterval(commentInterval);
+    };
   }, [result]);
 
   const startCamera = async (facing = facingMode) => {
@@ -176,11 +193,11 @@ function App() {
     setLoading(true);
 
     try {
-      const resultText = await analyzeImage(base64Image);
-      setResult(resultText);
+      const apiResult = await analyzeImage(base64Image);
+      setResult(apiResult);
     } catch (e) {
       console.error('API error:', e);
-      setResult('ERROR');
+      setResult({ verdict: 'ERROR', comment: '', box: null });
     }
     
     setLoading(false);
@@ -311,55 +328,100 @@ function App() {
       )}
 
       {/* Captured image with overlay */}
-      {capturedImage && (
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          zIndex: 5,
-        }}>
-          {/* キャプチャ範囲 */}
-          <div data-capture style={{
-            position: 'relative',
-            width: '100%',
-            height: '100%',
+      {capturedImage && (() => {
+        const verdict = result?.verdict;
+        const verdictColor =
+          verdict === 'JARVIS' ? 'rgb(0, 255, 0)'
+          : verdict === 'NOT JARVIS' ? 'rgb(255, 70, 70)'
+          : 'rgba(255, 255, 255, 0.85)';
+        const box = Array.isArray(result?.box) && result.box.length === 4 ? result.box : null;
+
+        return (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'black',
           }}>
-            <img
-              src={capturedImage}
-              alt="Captured"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              }}
-            />
-            
-            {/* Result overlay */}
-            {result && (
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 32,
-              }}>
+            <div data-capture style={{
+              position: 'relative',
+              display: 'inline-block',
+              lineHeight: 0,
+            }}>
+              <img
+                src={capturedImage}
+                alt="Captured"
+                style={{
+                  display: 'block',
+                  maxWidth: '100vw',
+                  maxHeight: '100vh',
+                }}
+              />
+
+              {/* Bounding box on detected face */}
+              {box && (
                 <div style={{
-                  fontFamily: '"OTR Grotesk", system-ui, sans-serif',
-                  fontWeight: 400,
-                  fontSize: 'clamp(24px, 8vw, 0px)',
-                  color: 'rgb(0, 255, 0)',
-                  textAlign: 'center',
-                  lineHeight: 0.9,
-                  letterSpacing: '-0.01em',
-                  whiteSpace: 'pre-wrap',
+                  position: 'absolute',
+                  top: `${box[0] / 10}%`,
+                  left: `${box[1] / 10}%`,
+                  width: `${(box[3] - box[1]) / 10}%`,
+                  height: `${(box[2] - box[0]) / 10}%`,
+                  border: `2px solid ${verdictColor}`,
+                  boxShadow: `0 0 0 1px rgba(0, 0, 0, 0.6), 0 0 12px ${verdictColor}80`,
+                  pointerEvents: 'none',
+                }} />
+              )}
+
+              {/* Verdict + Comment overlay */}
+              {result && (
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  padding: '24px 16px 40px',
+                  pointerEvents: 'none',
+                  background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent)',
+                  lineHeight: 'normal',
                 }}>
-                  {displayedResult}
+                  <div style={{
+                    fontFamily: '"OTR Grotesk", system-ui, sans-serif',
+                    fontWeight: 700,
+                    fontSize: 'clamp(40px, 11vw, 120px)',
+                    color: verdictColor,
+                    textAlign: 'center',
+                    lineHeight: 0.9,
+                    letterSpacing: '-0.03em',
+                    textShadow: '0 0 8px rgba(0, 0, 0, 0.55)',
+                  }}>
+                    {displayedVerdict}
+                  </div>
+                  {displayedComment && (
+                    <div style={{
+                      marginTop: 12,
+                      fontFamily: 'monospace',
+                      fontSize: 'clamp(11px, 2.4vw, 16px)',
+                      color: verdictColor,
+                      textAlign: 'center',
+                      letterSpacing: '0.08em',
+                      maxWidth: '90%',
+                      textShadow: '0 0 6px rgba(0, 0, 0, 0.6)',
+                    }}>
+                      {displayedComment}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Loading overlay */}
       {loading && (
