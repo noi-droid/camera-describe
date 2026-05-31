@@ -214,7 +214,7 @@ function App() {
 
   if (navigator.share && navigator.canShare) {
     canvas.toBlob(async (blob) => {
-      const file = new File([blob], `jarvis-detectator-${Date.now()}.png`, { type: 'image/png' });
+      const file = new File([blob], `jarvis-or-not-jarvis-${Date.now()}.png`, { type: 'image/png' });
 
       if (navigator.canShare({ files: [file] })) {
         try {
@@ -229,7 +229,7 @@ function App() {
     }, 'image/png');
   } else {
     const link = document.createElement('a');
-    link.download = `jarvis-detectator-${Date.now()}.png`;
+    link.download = `jarvis-or-not-jarvis-${Date.now()}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   }
@@ -269,7 +269,7 @@ function App() {
             letterSpacing: '-0.02em',
             textAlign: 'center',
           }}>
-            JARVIS COCKER<br />DETECTATOR
+            JARVIS OR<br />NOT JARVIS
           </div>
           <div style={{
             fontFamily: '"OTRGrotesk-Regular", system-ui, sans-serif',
@@ -448,7 +448,7 @@ function App() {
             pointerEvents: 'none',
           }}
         >
-          JARVIS DETECTATOR
+          JARVIS OR NOT JARVIS
         </div>
       )}
 
