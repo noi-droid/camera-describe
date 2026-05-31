@@ -261,7 +261,7 @@ function App() {
           padding: 24,
         }}>
           <div style={{
-            fontFamily: '"OTR Grotesk", system-ui, sans-serif',
+            fontFamily: '"OTRGrotesk-Regular", system-ui, sans-serif',
             color: 'rgb(0, 255, 0)',
             fontWeight: 700,
             fontSize: 'clamp(36px, 10vw, 96px)',
@@ -286,7 +286,7 @@ function App() {
               padding: '16px 32px',
               backgroundColor: 'white',
               color: 'black',
-              fontFamily: '"OTR Grotesk", system-ui, sans-serif',
+              fontFamily: '"OTRGrotesk-Regular", system-ui, sans-serif',
               fontSize: 14,
               fontWeight: 600,
               letterSpacing: '0.05em',
@@ -390,7 +390,7 @@ function App() {
                   lineHeight: 'normal',
                 }}>
                   <div style={{
-                    fontFamily: '"OTR Grotesk", system-ui, sans-serif',
+                    fontFamily: '"OTRGrotesk-Regular", system-ui, sans-serif',
                     fontWeight: 700,
                     fontSize: 'clamp(40px, 11vw, 120px)',
                     color: verdictColor,
@@ -403,7 +403,7 @@ function App() {
                   {displayedComment && (
                     <div style={{
                       marginTop: 12,
-                      fontFamily: '"OTR Grotesk", system-ui, sans-serif',
+                      fontFamily: '"OTRGrotesk-Regular", system-ui, sans-serif',
                       fontWeight: 400,
                       fontSize: 'clamp(14px, 3vw, 22px)',
                       color: verdictColor,
