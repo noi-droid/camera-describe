@@ -370,7 +370,6 @@ function App() {
                   width: `${(box[3] - box[1]) / 10}%`,
                   height: `${(box[2] - box[0]) / 10}%`,
                   border: `2px solid ${verdictColor}`,
-                  boxShadow: `0 0 0 1px rgba(0, 0, 0, 0.6), 0 0 12px ${verdictColor}80`,
                   pointerEvents: 'none',
                 }} />
               )}
@@ -398,20 +397,19 @@ function App() {
                     textAlign: 'center',
                     lineHeight: 0.9,
                     letterSpacing: '-0.03em',
-                    textShadow: '0 0 8px rgba(0, 0, 0, 0.55)',
                   }}>
                     {displayedVerdict}
                   </div>
                   {displayedComment && (
                     <div style={{
                       marginTop: 12,
-                      fontFamily: 'monospace',
-                      fontSize: 'clamp(11px, 2.4vw, 16px)',
+                      fontFamily: '"OTR Grotesk", system-ui, sans-serif',
+                      fontWeight: 400,
+                      fontSize: 'clamp(14px, 3vw, 22px)',
                       color: verdictColor,
                       textAlign: 'center',
-                      letterSpacing: '0.08em',
+                      letterSpacing: '-0.01em',
                       maxWidth: '90%',
-                      textShadow: '0 0 6px rgba(0, 0, 0, 0.6)',
                     }}>
                       {displayedComment}
                     </div>
